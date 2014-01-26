@@ -60,12 +60,16 @@ class CompileTypeScript extends SourceTask {
 		logConfig()
 		logger.info "\n" + command
 
-		def process = command.execute()
-		process.waitForProcessOutput(System.out, System.err);
-
-		if (process.exitValue() != 0) {
-			throw new RuntimeException("TypeScript compilation failed: " + process.exitValue())
+		try {
+			def process = command.execute()
+			process.waitForProcessOutput(System.out, System.err);
+			if (process.exitValue() != 0) {
+				throw new RuntimeException("TypeScript compilation failed: " + process.exitValue())
+			}
 		}
+		catch (IOException e) {
+			throw new IOException("Cannot run tsc. Try installing it with\n\n\tnpm install -g typescript")
+		} 
 
 		ant.concat(destfile: outputFile.canonicalPath, fixlastline: 'yes') {
             jsFiles.each {
