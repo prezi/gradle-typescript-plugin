@@ -1,0 +1,27 @@
+group = 'com.prezi.gradle'
+version = '1.0-SNAPSHOT'
+
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'idea'
+
+sourceCompatibility = "1.6"
+targetCompatibility = "1.6"
+
+dependencies {
+	compile gradleApi()
+	compile localGroovy()
+}
+
+uploadArchives {
+	repositories {
+		mavenDeployer {
+			repository(url: "https://artifactory.prezi.com/plugins-release-local/") {
+				authentication(userName: nexusUser, password: nexusPassword)
+			}
+			snapshotRepository(url: "https://artifactory.prezi.com/plugins-snapshot-local/") {
+				authentication(userName: nexusUser, password: nexusPassword)
+			}
+		}
+	}
+}
