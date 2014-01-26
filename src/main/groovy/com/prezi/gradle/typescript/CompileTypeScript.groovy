@@ -7,7 +7,8 @@ import org.gradle.api.tasks.TaskAction
 class CompileTypeScript extends SourceTask {
 
 	@OutputFile
-	def outputFile
+	File outputFile
+
 	def jsFiles = []
 
 	def target = "ES5"
@@ -15,9 +16,13 @@ class CompileTypeScript extends SourceTask {
 	def strict = false
 	def flags = ""
 
+	def outputFile(fileName) {
+		this.outputFile = project.file(fileName)
+	}
+
 	def prependJs(fileName) {
-		jsFiles.add(new File(fileName))
-		inputs.file(new File(fileName))
+		jsFiles.add(project.file(fileName))
+		inputs.file(project.file(fileName))
 	}
 
 	private def logConfig() {
@@ -31,7 +36,7 @@ class CompileTypeScript extends SourceTask {
 		def command = ["tsc", "--out", tscOutput]
 		def cflags = [ "--target", target ]
 
-		cflags += flags.split(" ")
+		cflags += flags.tokenize(" ")
 
 		if (!enableComments) {
 			cflags += [ "--removeComments" ]
@@ -62,7 +67,7 @@ class CompileTypeScript extends SourceTask {
 			throw new RuntimeException("TypeScript compilation failed: " + process.exitValue())
 		}
 
-		ant.concat(destfile: (outputFile as File).canonicalPath, fixlastline: 'yes') {
+		ant.concat(destfile: outputFile.canonicalPath, fixlastline: 'yes') {
             jsFiles.each {
                 fileset(file: it)
             }
