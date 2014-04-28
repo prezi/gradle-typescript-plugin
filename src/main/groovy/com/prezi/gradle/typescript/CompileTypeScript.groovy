@@ -1,55 +1,69 @@
 package com.prezi.gradle.typescript
 
+import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 class CompileTypeScript extends SourceTask {
 
+	LinkedHashSet<Object> prependFiles = []
+	void prependJs(Object... files) {
+		prependFiles.addAll(files)
+	}
+	@InputFiles
+	FileCollection getPrependFiles() {
+		project.files(prependFiles)
+	}
+
+	LinkedHashSet<Object> appendFiles = []
+	void appendJs(Object... files) {
+		appendFiles.addAll(files)
+	}
+	@InputFiles
+	FileCollection getAppendFiles() {
+		project.files(appendFiles)
+	}
+
+	@Input
+	String target = "ES5"
+	void target(String target) {
+		if (!(target in ["ES3", "ES5"])) {
+			logger.warn "Unknown target: ${target}"
+		}
+		this.target = target
+	}
+
+	@Input
+	boolean enableComments = false
+	void enableComments(boolean enableComments) {
+		this.enableComments = enableComments
+	}
+
+	@Input
+	boolean strict = false
+	void strict(boolean strict) {
+		this.strict = strict
+	}
+
+	@Input
+	LinkedHashSet<String> flagList = []
+	public void flag(String... flag)
+	{
+		flagList.addAll(flag)
+	}
+	@Deprecated
+	public void setFlags(String flags) {
+		flag(flags.tokenize(" ").toArray(new String[0]))
+	}
+
 	@OutputFile
 	File outputFile
-
-	def jsFiles = []
-
-	def target = "ES5"
-	def enableComments = false
-	def strict = false
-	def flags = ""
-
-	def outputFile(fileName) {
-		this.outputFile = project.file(fileName)
+	def outputFile(Object file) {
+		this.outputFile = project.file(file)
 	}
-
-	def prependJs(fileName) {
-		jsFiles.add(project.file(fileName))
-		inputs.file(project.file(fileName))
-	}
-
-	private def logConfig() {
-		logger.info "Config:"
-		logger.info "\ttarget " + target
-		logger.info "\tenableComments " + enableComments
-		logger.info "\tstrict " + strict
-	}
-
-	private def compileCommand(tscOutput) {
-		def command = ["tsc", "--out", tscOutput]
-		def cflags = [ "--target", target ]
-
-		cflags += flags.tokenize(" ")
-
-		if (!enableComments) {
-			cflags += [ "--removeComments" ]
-		}
-
-		if (strict) {
-			cflags += [ "--noImplicitAny" ]
-		}
-
-		command += cflags + source.files
-		return command.join(" ")		
-	}
-
 
 	@TaskAction
 	def run() {
@@ -57,25 +71,44 @@ class CompileTypeScript extends SourceTask {
 		def	tscOutput = new File(tempDir, "typescript-output.js")
 		def command = compileCommand(tscOutput)
 
-		logConfig()
-		logger.info "\n" + command
-
 		try {
 			def process = command.execute()
-			process.waitForProcessOutput(System.out, System.err);
+			process.waitForProcessOutput((OutputStream) System.out, System.err);
 			if (process.exitValue() != 0) {
 				throw new RuntimeException("TypeScript compilation failed: " + process.exitValue())
 			}
 		}
 		catch (IOException e) {
 			throw new IOException("Cannot run tsc. Try installing it with\n\n\tnpm install -g typescript")
-		} 
+		}
 
 		ant.concat(destfile: outputFile.canonicalPath, fixlastline: 'yes') {
-            jsFiles.each {
+            getPrependFiles().each {
                 fileset(file: it)
             }
 			fileset(file: tscOutput)
+			getAppendFiles().each {
+		       fileset(file: it)
+   			}
         }
+	}
+
+	private List<String> compileCommand(File tscOutput) {
+		List<String> command = ["tsc", "--out", tscOutput.absolutePath]
+		command += [ "--target", getTarget() ]
+
+		command += getFlagList()
+
+		if (!isEnableComments()) {
+			command += [ "--removeComments" ]
+		}
+
+		if (isStrict()) {
+			command += [ "--noImplicitAny" ]
+		}
+
+		command += source.files*.absolutePath
+
+		return command
 	}
 }
