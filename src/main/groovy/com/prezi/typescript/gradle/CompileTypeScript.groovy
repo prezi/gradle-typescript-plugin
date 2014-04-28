@@ -1,4 +1,4 @@
-package com.prezi.gradle.typescript
+package com.prezi.typescript.gradle
 
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
