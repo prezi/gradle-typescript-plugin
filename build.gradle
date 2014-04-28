@@ -1,4 +1,5 @@
 group = 'com.prezi.typescript'
+description = "Gradle TypeScript plugin"
 
 if (hasProperty("release")) {
 	version = [ "git", "describe", "--match", "[0-9]*", "--dirty"].execute().text.trim()
@@ -25,6 +26,37 @@ dependencies {
 uploadArchives {
 	repositories {
 		mavenDeployer {
+			pom.project {
+				url "http://github.com/prezi/gradle-typescript-plugin"
+				name project.name
+				description project.description
+
+				scm {
+					url "scm:git@github.com:prezi/gradle-typescript-plugin.git"
+					connection "scm:git@github.com:prezi/gradle-typescript-plugin.git"
+					developerConnection "scm:git@github.com:prezi/gradle-typescript-plugin.git"
+				}
+
+				licenses {
+					license {
+						name "The Apache Software License, Version 2.0"
+						url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+						distribution "repo"
+					}
+				}
+
+				developers {
+					developer {
+						id "lptr"
+						name "Lorant Pinter"
+					}
+					developer {
+						id "gidapataki"
+						name "Gida Pataki"
+					}
+				}
+			}
+
 			repository(url: "https://artifactory.prezi.com/plugins-release-local/") {
 				authentication(userName: nexusUser, password: nexusPassword)
 			}
