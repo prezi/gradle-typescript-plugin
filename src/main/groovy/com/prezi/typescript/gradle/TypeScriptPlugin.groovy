@@ -62,7 +62,7 @@ class TypeScriptPlugin implements Plugin<Project> {
 		// Add compile task
 		binaryContainer.withType(TypeScriptBinary).all { TypeScriptBinary binary ->
 			def namingScheme = ((BinaryInternal) binary).namingScheme
-			def compileTask = project.tasks.create(namingScheme.getTaskName("compile"), CompileTypeScript)
+			def compileTask = project.tasks.create(namingScheme.getTaskName("compile"), TypeScriptCompile)
 			compileTask.description = "Compiles ${binary}"
 			compileTask.source binary.source
 			binary.compileTask = compileTask

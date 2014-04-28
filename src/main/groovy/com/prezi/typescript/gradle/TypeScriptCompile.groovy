@@ -7,7 +7,7 @@ import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
-class CompileTypeScript extends SourceTask {
+class TypeScriptCompile extends SourceTask {
 
 	LinkedHashSet<Object> prependFiles = []
 	void prependJs(Object... files) {

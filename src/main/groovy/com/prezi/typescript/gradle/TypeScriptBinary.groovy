@@ -15,7 +15,7 @@ class TypeScriptBinary extends AbstractBuildableModelElement implements BinaryIn
 	private final String name
 	private final BinaryNamingScheme namingScheme
 
-	CompileTypeScript compileTask
+	TypeScriptCompile compileTask
 
 	protected TypeScriptBinary(String parentName) {
 		this.namingScheme = new TypeScriptBinaryNamingScheme(parentName)
