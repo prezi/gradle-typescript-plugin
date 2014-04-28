@@ -11,6 +11,9 @@ task version << {
 	println "Version: ${version}"
 }
 
+def sonatype = hasProperty("sonatype")
+def signArtifacts = sonatype || hasProperty("sign")
+
 apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'idea'
@@ -77,7 +80,18 @@ uploadArchives {
 				}
 			}
 
-			if (project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")) {
+			if (sonatype) {
+				repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+					def user = project.getProperty("sonatypeUsername")
+					def password = project.getProperty("sonatypePassword")
+					authentication(userName: user, password: password)
+				}
+				snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+					def user = project.getProperty("sonatypeUsername")
+					def password = project.getProperty("sonatypePassword")
+					authentication(userName: user, password: password)
+				}
+			} else if (project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")) {
 				def user = project.getProperty("nexusUser")
 				def password = project.getProperty("nexusPassword")
 				repository(url: "https://artifactory.prezi.com/plugins-release-local/") {
@@ -86,6 +100,22 @@ uploadArchives {
 				snapshotRepository(url: "https://artifactory.prezi.com/plugins-snapshot-local/") {
 					authentication(userName: user, password: password)
 				}
+			}
+		}
+	}
+}
+
+if (signArtifacts) {
+	apply plugin: "signing"
+
+	signing {
+		sign configurations.archives
+	}
+
+	uploadArchives {
+		repositories {
+			mavenDeployer {
+				beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 			}
 		}
 	}
