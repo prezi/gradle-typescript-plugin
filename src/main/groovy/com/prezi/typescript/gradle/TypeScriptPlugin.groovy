@@ -65,6 +65,7 @@ class TypeScriptPlugin implements Plugin<Project> {
 			def compileTask = project.tasks.create(namingScheme.getTaskName("compile"), TypeScriptCompile)
 			compileTask.description = "Compiles ${binary}"
 			compileTask.source binary.source
+			compileTask.conventionMapping.outputFile = { project.file("${project.buildDir}/compiled-typescript/compiled.js") }
 			binary.compileTask = compileTask
 			binary.builtBy compileTask
 			logger.debug("Added compile task ${compileTask} for binary ${binary} in ${project.path}")

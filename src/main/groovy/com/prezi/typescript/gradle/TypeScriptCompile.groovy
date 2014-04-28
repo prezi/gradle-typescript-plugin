@@ -31,7 +31,7 @@ class TypeScriptCompile extends SourceTask {
 	String target = "ES5"
 	void target(String target) {
 		if (!(target in ["ES3", "ES5"])) {
-			logger.warn "Unknown target: ${target}"
+			logger.warn "Unknown TypeScript target: ${target}"
 		}
 		this.target = target
 	}
@@ -82,7 +82,7 @@ class TypeScriptCompile extends SourceTask {
 			throw new IOException("Cannot run tsc. Try installing it with\n\n\tnpm install -g typescript")
 		}
 
-		ant.concat(destfile: outputFile.canonicalPath, fixlastline: 'yes') {
+		ant.concat(destfile: getOutputFile().absolutePath, fixlastline: 'yes') {
             getPrependFiles().each {
                 fileset(file: it)
             }
