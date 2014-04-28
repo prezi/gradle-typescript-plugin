@@ -23,6 +23,10 @@ dependencies {
 	compile localGroovy()
 }
 
+jar {
+	from "LICENSE.txt"
+}
+
 uploadArchives {
 	repositories {
 		mavenDeployer {
