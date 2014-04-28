@@ -72,6 +72,7 @@ class TypeScriptCompile extends SourceTask {
 		def command = compileCommand(tscOutput)
 
 		try {
+			logger.info "Executing ${command.join(" ")}"
 			def process = command.execute()
 			process.waitForProcessOutput((OutputStream) System.out, System.err);
 			if (process.exitValue() != 0) {
