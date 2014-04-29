@@ -56,6 +56,7 @@ class TypeScriptPlugin implements Plugin<Project> {
 
 		// Add compiled binary
 		def compiledTypeScript = new TypeScriptBinary("main")
+		main.withType(TypeScriptSourceSet).all { compiledTypeScript.source.add it }
 		binaryContainer.add(compiledTypeScript)
 		logger.debug("Added compiled binary ${compiledTypeScript} in ${project.path}")
 
