@@ -45,10 +45,10 @@ class TypeScriptPlugin implements Plugin<Project> {
 			void execute(FunctionalSourceSet functionalSourceSet) {
 				// Inspired by JavaBasePlugin
 				// Add TypeScript source set for "src/<name>/ts"
-				def haxeSourceSet = instantiator.newInstance(TypeScriptSourceSet, "typescript", functionalSourceSet, fileResolver)
-				haxeSourceSet.source.srcDir(String.format("src/%s/ts", functionalSourceSet.name))
-				functionalSourceSet.add(haxeSourceSet)
-				TypeScriptPlugin.logger.debug("Added ${haxeSourceSet} in ${project.path}")
+				def typeScriptSourceSet = instantiator.newInstance(TypeScriptSourceSet, "typescript", functionalSourceSet, fileResolver)
+				typeScriptSourceSet.source.srcDir(String.format("src/%s/ts", functionalSourceSet.name))
+				functionalSourceSet.add(typeScriptSourceSet)
+				TypeScriptPlugin.logger.debug("Added ${typeScriptSourceSet} in ${project.path}")
 			}
 		})
 
