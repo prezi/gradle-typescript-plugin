@@ -65,7 +65,8 @@ class TypeScriptPlugin implements Plugin<Project> {
 			def namingScheme = ((BinaryInternal) binary).namingScheme
 			def compileTask = project.tasks.create(namingScheme.getTaskName("compile"), TypeScriptCompile)
 			compileTask.description = "Compiles ${binary}"
-			compileTask.source binary.source
+			binary.source.all { compileTask.source it.source }
+			compileTask.dependsOn binary.source
 			compileTask.conventionMapping.outputFile = { project.file("${project.buildDir}/compiled-typescript/compiled.js") }
 			binary.compileTask = compileTask
 			binary.builtBy compileTask
