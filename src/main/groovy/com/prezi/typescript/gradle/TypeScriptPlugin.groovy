@@ -36,7 +36,8 @@ class TypeScriptPlugin implements Plugin<Project> {
 		def projectSourceSet = project.extensions.getByType(ProjectSourceSet)
 
 		def main = projectSourceSet.maybeCreate("main")
-		logger.debug("Created ${main} in ${project.path}")
+		def test = projectSourceSet.maybeCreate("test")
+		logger.debug("Created ${main} and ${test} in ${project.path}")
 
 		// For each source set create a configuration and language source sets
 		projectSourceSet.all(new Action<FunctionalSourceSet>() {
@@ -58,10 +59,17 @@ class TypeScriptPlugin implements Plugin<Project> {
 		def compiledTypeScript = new TypeScriptBinary("main")
 		main.withType(TypeScriptSourceSet).all { compiledTypeScript.source.add it }
 		binaryContainer.add(compiledTypeScript)
-		logger.debug("Added compiled binary ${compiledTypeScript} in ${project.path}")
+		logger.debug("Added binary ${compiledTypeScript} in ${project.path}")
 
-		// Add compile task
-		binaryContainer.withType(TypeScriptBinary).all { TypeScriptBinary binary ->
+		// Add test binary
+		def testTypeScript = new TypeScriptTestBinary("test")
+		main.withType(TypeScriptSourceSet).all { testTypeScript.source.add it }
+		test.withType(TypeScriptSourceSet).all { testTypeScript.source.add it }
+		binaryContainer.add(testTypeScript)
+		logger.debug("Added binary ${testTypeScript} in ${project.path}")
+
+		// Add compile tasks
+		binaryContainer.withType(TypeScriptBinaryBase).all { TypeScriptBinaryBase binary ->
 			def namingScheme = ((BinaryInternal) binary).namingScheme
 			def compileTask = project.tasks.create(namingScheme.getTaskName("compile"), TypeScriptCompile)
 			compileTask.description = "Compiles ${binary}"
