@@ -125,3 +125,5 @@ if (signArtifacts) {
 		}
 	}
 }
+
+tasks.withType(Upload).all { it.dependsOn "check" }
