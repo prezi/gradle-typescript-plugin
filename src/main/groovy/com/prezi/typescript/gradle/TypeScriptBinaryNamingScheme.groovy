@@ -1,5 +1,6 @@
 package com.prezi.typescript.gradle
 
+import com.google.common.collect.Lists
 import org.gradle.api.Nullable
 import org.gradle.language.base.internal.BinaryNamingScheme
 
@@ -60,5 +61,10 @@ class TypeScriptBinaryNamingScheme implements BinaryNamingScheme {
 
 	public String getOutputDirectoryBase() {
 		return parentName
+	}
+
+	@Override
+	List<String> getVariantDimensions() {
+		return []
 	}
 }

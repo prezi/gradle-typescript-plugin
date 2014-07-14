@@ -127,3 +127,7 @@ if (signArtifacts) {
 }
 
 tasks.withType(Upload).all { it.dependsOn "check" }
+
+task wrapper(type: Wrapper) {
+	gradleVersion = "1.12"
+}
