@@ -1,13 +1,12 @@
-package com.prezi.typescript.gradle
+package com.prezi.typescript.gradle;
 
-import com.google.common.collect.Lists
-import org.gradle.api.Nullable
-import org.gradle.language.base.internal.BinaryNamingScheme
+import com.google.common.collect.Lists;
+import org.gradle.api.Nullable;
+import org.gradle.language.base.internal.BinaryNamingScheme;
 
-/**
- * Created by lptr on 28/04/14.
- */
-class TypeScriptBinaryNamingScheme implements BinaryNamingScheme {
+import java.util.List;
+
+public class TypeScriptBinaryNamingScheme implements BinaryNamingScheme {
 	private final String parentName;
 	private final String collapsedName;
 
@@ -42,12 +41,14 @@ class TypeScriptBinaryNamingScheme implements BinaryNamingScheme {
 			if (word == null || word.length() == 0) {
 				continue;
 			}
+
 			if (builder.length() == 0) {
 				appendUncapitalized(builder, word);
 			} else {
 				appendCapitalized(builder, word);
 			}
 		}
+
 		return builder.toString();
 	}
 
@@ -60,11 +61,11 @@ class TypeScriptBinaryNamingScheme implements BinaryNamingScheme {
 	}
 
 	public String getOutputDirectoryBase() {
-		return parentName
+		return parentName;
 	}
 
 	@Override
-	List<String> getVariantDimensions() {
-		return []
+	public List<String> getVariantDimensions() {
+		return Lists.newArrayList();
 	}
 }
