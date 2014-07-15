@@ -31,9 +31,10 @@ dependencies {
 	testCompile "org.spockframework:spock-core:0.7-groovy-1.8"
 }
 
-task groovydocJar(type: Jar, dependsOn: groovydoc) {
+task javadocJar(type: Jar) {
+	dependsOn javadoc
 	classifier = "javadoc"
-	from "build/docs/groovydoc"
+	from javadoc.destinationDir
 }
 
 task sourcesJar(type: Jar) {
@@ -47,7 +48,7 @@ jar {
 
 artifacts {
 	archives jar
-	archives groovydocJar
+	archives javadocJar
 	archives sourcesJar
 }
 
