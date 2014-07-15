@@ -60,7 +60,7 @@ uploadArchives {
 				description project.description
 
 				scm {
-					url "scm:git@github.com:prezi/gradle-typescript-plugin.git"
+					url "http://github.com/prezi/gradle-typescript-plugin"
 					connection "scm:git@github.com:prezi/gradle-typescript-plugin.git"
 					developerConnection "scm:git@github.com:prezi/gradle-typescript-plugin.git"
 				}
