@@ -28,7 +28,9 @@ repositories {
 dependencies {
 	compile gradleApi()
 	compile "com.google.guava:guava:17.0"
-	testCompile "org.spockframework:spock-core:0.7-groovy-1.8"
+	testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
+	// Override the one from Spock
+	testCompile "org.codehaus.groovy:groovy-all:2.3.3"
 }
 
 task javadocJar(type: Jar) {
@@ -130,5 +132,5 @@ if (signArtifacts) {
 tasks.withType(Upload).all { it.dependsOn "check" }
 
 task wrapper(type: Wrapper) {
-	gradleVersion = "1.12"
+	gradleVersion = "2.0"
 }

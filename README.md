@@ -5,6 +5,8 @@ TypeScript support for Gradle.
 
 [![Build Status](https://travis-ci.org/prezi/gradle-typescript-plugin.svg?branch=master)](https://travis-ci.org/prezi/gradle-typescript-plugin)
 
+Gradle 2.0 required. With earlier versions you will get an error that `org.gradle.runtime.base.BinaryContainer` is missing.
+
 The plugin automatically configures the following things:
 
 * adds `src/main/ts` as the default TypeScript source folder
