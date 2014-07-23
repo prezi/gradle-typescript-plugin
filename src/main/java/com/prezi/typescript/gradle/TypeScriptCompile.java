@@ -7,7 +7,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharSink;
+import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
+import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -142,7 +144,9 @@ public class TypeScriptCompile extends SourceTask {
 			throw new IOException("Cannot run tsc. Try installing it with\n\n\tnpm install -g typescript", e);
 		}
 
-		CharSink output = Files.asCharSink(getOutputFile(), Charsets.UTF_8);
+		File outputFile = getOutputFile();
+		FileUtils.deleteQuietly(outputFile);
+		CharSink output = Files.asCharSink(outputFile, Charsets.UTF_8, FileWriteMode.APPEND);
 		for (File file : getPrependFiles()) {
 			Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
 		}
