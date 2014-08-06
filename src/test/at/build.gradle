@@ -1,0 +1,28 @@
+buildscript {
+	String gitVersion
+	if (hasProperty("release")) {
+		gitVersion = [ "git", "describe", "--match", "[0-9]*", "--dirty"].execute().text.trim()
+	} else {
+		gitVersion = [ "git", "describe", "--match", "[0-9]*", "--abbrev=0"].execute().text.trim() + "-SNAPSHOT"
+	}
+
+	repositories {
+		mavenLocal()
+		mavenCentral()
+	}
+	dependencies {
+		classpath "com.prezi.typescript:gradle-typescript-plugin:${gitVersion}"
+	}
+}
+
+apply plugin: "typescript"
+
+typescript {
+	sources {
+		main {
+			typescript {
+				source.srcDir "src/main/ts2"
+			}
+		}
+	}
+}
