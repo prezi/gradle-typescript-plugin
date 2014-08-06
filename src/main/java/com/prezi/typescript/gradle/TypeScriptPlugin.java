@@ -1,17 +1,16 @@
 package com.prezi.typescript.gradle;
 
+import com.prezi.typescript.gradle.incubating.BinaryContainer;
+import com.prezi.typescript.gradle.incubating.BinaryNamingScheme;
+import com.prezi.typescript.gradle.incubating.FunctionalSourceSet;
+import com.prezi.typescript.gradle.incubating.LanguageSourceSet;
+import com.prezi.typescript.gradle.incubating.ProjectSourceSet;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.internal.reflect.Instantiator;
-import org.gradle.language.base.FunctionalSourceSet;
-import org.gradle.language.base.LanguageSourceSet;
-import org.gradle.language.base.ProjectSourceSet;
-import org.gradle.language.base.plugins.LanguageBasePlugin;
-import org.gradle.runtime.base.BinaryContainer;
-import org.gradle.runtime.base.internal.BinaryNamingScheme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +34,10 @@ public class TypeScriptPlugin implements Plugin<Project> {
 	@Override
 	public void apply(final Project project) {
 		project.getPlugins().apply(BasePlugin.class);
-		project.getPlugins().apply(LanguageBasePlugin.class);
 
-		ProjectSourceSet projectSourceSet = project.getExtensions().getByType(ProjectSourceSet.class);
+		TypeScriptExtension typeScriptExtension = project.getExtensions().create("typescript", TypeScriptExtension.class, project, instantiator);
 
+		ProjectSourceSet projectSourceSet = typeScriptExtension.getSources();
 		FunctionalSourceSet main = projectSourceSet.maybeCreate("main");
 		FunctionalSourceSet test = projectSourceSet.maybeCreate("test");
 		logger.debug("Created {} and {} in {}", main, test, project.getPath());
@@ -56,7 +55,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 			}
 		});
 
-		BinaryContainer binaryContainer = project.getExtensions().getByType(BinaryContainer.class);
+		BinaryContainer binaryContainer = typeScriptExtension.getBinaries();
 
 		// Add compiled binary
 		final TypeScriptBinary compiledTypeScript = new TypeScriptBinary("main");

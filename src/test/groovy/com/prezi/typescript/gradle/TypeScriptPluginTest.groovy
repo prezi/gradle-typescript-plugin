@@ -1,15 +1,12 @@
 package com.prezi.typescript.gradle
 
+import com.prezi.typescript.gradle.incubating.BinaryContainer
+import com.prezi.typescript.gradle.incubating.LanguageSourceSet
+import com.prezi.typescript.gradle.incubating.ProjectSourceSet
 import org.gradle.api.Project
-import org.gradle.language.base.LanguageSourceSet
-import org.gradle.language.base.ProjectSourceSet
-import org.gradle.runtime.base.BinaryContainer
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 
-/**
- * Created by lptr on 29/04/14.
- */
 class TypeScriptPluginTest extends Specification {
 	Project project
 
@@ -19,9 +16,9 @@ class TypeScriptPluginTest extends Specification {
 	}
 
 	def "empty project creates stuff"() {
-		def sources = project.extensions.getByType(ProjectSourceSet)
+		def sources = getSources()
 		sources.getByName("main").getByName("typescript").source.srcDir "build/generated"
-		TypeScriptBinary binary = project.extensions.getByType(BinaryContainer).iterator().next() as TypeScriptBinary
+		TypeScriptBinary binary = getBinaries().iterator().next() as TypeScriptBinary
 		TypeScriptCompile compileTask = project.tasks.getByName("compile") as TypeScriptCompile
 		File sourceFile = makeFile("src/main/ts/Test.ts")
 		File generatedFile = makeFile("build/generated/Gen.ts")
@@ -41,7 +38,7 @@ class TypeScriptPluginTest extends Specification {
 	}
 
 	private List<File> sourceDirs(String functionalSourceSet, String languageSourceSet, Class<? extends LanguageSourceSet> type = LanguageSourceSet) {
-		def sourceSet = project.extensions.getByType(ProjectSourceSet).getByName(functionalSourceSet).getByName(languageSourceSet)
+		def sourceSet = getSources().getByName(functionalSourceSet).getByName(languageSourceSet)
 		if (!(type.isAssignableFrom(sourceSet.getClass()))) {
 			throw new ClassCastException("Expected \"${languageSourceSet}\" in \"${functionalSourceSet}\" to be ${type.name} but got ${sourceSet.getClass().name}")
 		}
@@ -58,5 +55,13 @@ class TypeScriptPluginTest extends Specification {
 
 	private List<File> files(String... names) {
 		project.files(names).files.sort()
+	}
+
+	private BinaryContainer getBinaries() {
+		project.extensions.getByType(TypeScriptExtension).binaries
+	}
+
+	private ProjectSourceSet getSources() {
+		project.extensions.getByType(TypeScriptExtension).sources
 	}
 }

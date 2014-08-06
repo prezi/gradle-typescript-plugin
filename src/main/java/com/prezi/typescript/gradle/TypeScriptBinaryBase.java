@@ -1,11 +1,11 @@
 package com.prezi.typescript.gradle;
 
+import com.prezi.typescript.gradle.incubating.AbstractBuildableModelElement;
+import com.prezi.typescript.gradle.incubating.BinaryInternal;
+import com.prezi.typescript.gradle.incubating.BinaryNamingScheme;
+import com.prezi.typescript.gradle.incubating.LanguageSourceSet;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.internal.DefaultDomainObjectSet;
-import org.gradle.language.base.LanguageSourceSet;
-import org.gradle.runtime.base.internal.AbstractBuildableModelElement;
-import org.gradle.runtime.base.internal.BinaryInternal;
-import org.gradle.runtime.base.internal.BinaryNamingScheme;
 
 public class TypeScriptBinaryBase extends AbstractBuildableModelElement implements BinaryInternal {
 	private final DefaultDomainObjectSet<LanguageSourceSet> source = new DefaultDomainObjectSet<LanguageSourceSet>(LanguageSourceSet.class);
