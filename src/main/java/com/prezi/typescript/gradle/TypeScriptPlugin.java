@@ -58,7 +58,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		BinaryContainer binaryContainer = typeScriptExtension.getBinaries();
 
 		// Add compiled binary
-		final TypeScriptBinary compiledTypeScript = new TypeScriptBinary("main");
+		final TypeScriptBinary compiledTypeScript = new TypeScriptBinary("js");
 		main.withType(TypeScriptSourceSet.class).all(new Action<TypeScriptSourceSet>() {
 			@Override
 			public void execute(TypeScriptSourceSet it) {
@@ -69,7 +69,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		logger.debug("Added binary {} in {}", compiledTypeScript, project.getPath());
 
 		// Add test binary
-		final TypeScriptTestBinary testTypeScript = new TypeScriptTestBinary("test");
+		final TypeScriptTestBinary testTypeScript = new TypeScriptTestBinary("testJs");
 		main.withType(TypeScriptSourceSet.class).all(new Action<TypeScriptSourceSet>() {
 			@Override
 			public void execute(TypeScriptSourceSet it) {

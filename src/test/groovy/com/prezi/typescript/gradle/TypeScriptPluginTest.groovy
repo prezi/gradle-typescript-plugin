@@ -19,7 +19,7 @@ class TypeScriptPluginTest extends Specification {
 		def sources = getSources()
 		sources.getByName("main").getByName("typescript").source.srcDir "build/generated"
 		TypeScriptBinary binary = getBinaries().iterator().next() as TypeScriptBinary
-		TypeScriptCompile compileTask = project.tasks.getByName("compile") as TypeScriptCompile
+		TypeScriptCompile compileTask = project.tasks.getByName("compileJs") as TypeScriptCompile
 		File sourceFile = makeFile("src/main/ts/Test.ts")
 		File generatedFile = makeFile("build/generated/Gen.ts")
 
