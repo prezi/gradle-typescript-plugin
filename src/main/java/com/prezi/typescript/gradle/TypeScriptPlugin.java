@@ -8,6 +8,7 @@ import com.prezi.typescript.gradle.incubating.ProjectSourceSet;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.internal.reflect.Instantiator;
@@ -42,7 +43,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		FunctionalSourceSet test = projectSourceSet.maybeCreate("test");
 		logger.debug("Created {} and {} in {}", main, test, project.getPath());
 
-		// For each source set create a configuration and language source sets
+		// For each source set create language source sets
 		projectSourceSet.all(new Action<FunctionalSourceSet>() {
 			@Override
 			public void execute(FunctionalSourceSet functionalSourceSet) {
@@ -57,8 +58,15 @@ public class TypeScriptPlugin implements Plugin<Project> {
 
 		BinaryContainer binaryContainer = typeScriptExtension.getBinaries();
 
+		addBinaries(project, main, test, binaryContainer);
+		addCompileTasks(project, binaryContainer);
+
+	}
+
+	private void addBinaries(Project project, FunctionalSourceSet main, FunctionalSourceSet test, BinaryContainer binaryContainer) {
 		// Add compiled binary
-		final TypeScriptBinary compiledTypeScript = new TypeScriptBinary("js");
+		Configuration compileConfig = project.getConfigurations().maybeCreate("compile");
+		final TypeScriptBinary compiledTypeScript = new TypeScriptBinary("js", compileConfig);
 		main.withType(TypeScriptSourceSet.class).all(new Action<TypeScriptSourceSet>() {
 			@Override
 			public void execute(TypeScriptSourceSet it) {
@@ -69,7 +77,9 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		logger.debug("Added binary {} in {}", compiledTypeScript, project.getPath());
 
 		// Add test binary
-		final TypeScriptTestBinary testTypeScript = new TypeScriptTestBinary("testJs");
+		Configuration testCompileConfig = project.getConfigurations().maybeCreate("testCompile");
+		testCompileConfig.extendsFrom(compileConfig);
+		final TypeScriptTestBinary testTypeScript = new TypeScriptTestBinary("testJs", testCompileConfig);
 		main.withType(TypeScriptSourceSet.class).all(new Action<TypeScriptSourceSet>() {
 			@Override
 			public void execute(TypeScriptSourceSet it) {
@@ -83,8 +93,10 @@ public class TypeScriptPlugin implements Plugin<Project> {
 			}
 		});
 		binaryContainer.add(testTypeScript);
-		logger.debug("Added binary {} in {}", testTypeScript, project.getPath());
+		logger.debug("Added test binary {} in {}", testTypeScript, project.getPath());
+	}
 
+	private void addCompileTasks(final Project project, BinaryContainer binaryContainer) {
 		// Add compile tasks
 		binaryContainer.withType(TypeScriptBinaryBase.class).all(new Action<TypeScriptBinaryBase>() {
 			@Override
@@ -98,6 +110,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 						compileTask.source(it.getSource());
 					}
 				});
+				compileTask.source(binary.getConfiguration());
 				compileTask.dependsOn(binary.getSource());
 				compileTask.getConventionMapping().map("outputFile", new Callable<File>() {
 					@Override
