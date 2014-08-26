@@ -8,6 +8,7 @@ import com.prezi.typescript.gradle.incubating.ProjectSourceSet;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.plugins.BasePlugin;
@@ -20,6 +21,10 @@ import java.io.File;
 import java.util.concurrent.Callable;
 
 public class TypeScriptPlugin implements Plugin<Project> {
+
+	public static final String CHECK_TASK_NAME = "check";
+	public static final String BUILD_TASK_NAME = "build";
+	public static final String VERIFICATION_GROUP = "verification";
 
 	private static final Logger logger = LoggerFactory.getLogger(TypeScriptPlugin.class);
 
@@ -60,7 +65,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 
 		addBinaries(project, main, test, binaryContainer);
 		addCompileTasks(project, binaryContainer);
-
+		addStandardBuildTasks(project);
 	}
 
 	private void addBinaries(Project project, FunctionalSourceSet main, FunctionalSourceSet test, BinaryContainer binaryContainer) {
@@ -124,5 +129,23 @@ public class TypeScriptPlugin implements Plugin<Project> {
 			}
 
 		});
+	}
+
+	private void addStandardBuildTasks(final Project project) {
+		Task checkTask = project.getTasks().findByName(CHECK_TASK_NAME);
+		if (checkTask == null) {
+			checkTask = project.getTasks().create(CHECK_TASK_NAME);
+			checkTask.setGroup(VERIFICATION_GROUP);
+			checkTask.setDescription("Runs all checks.");
+		}
+
+		Task buildTask = project.getTasks().findByName(BUILD_TASK_NAME);
+		if (buildTask == null) {
+			buildTask = project.getTasks().create(BUILD_TASK_NAME);
+			buildTask.setDescription("Assembles and tests this project.");
+			buildTask.setGroup(BasePlugin.BUILD_GROUP);
+		}
+		buildTask.dependsOn(BasePlugin.ASSEMBLE_TASK_NAME);
+		buildTask.dependsOn(checkTask);
 	}
 }
