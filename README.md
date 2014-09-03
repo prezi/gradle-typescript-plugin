@@ -43,3 +43,16 @@ task compileTypeScript(type: com.prezi.typescript.gradle.TypeScriptCompile) {
 	flag "--sourceRoot", "sources/something"
 }
 ```
+
+## Configurations
+
+You can add dependencies (like d.ts files) to the build path using these pre-defined configurations:
+
+ * compile
+ * testCompile (extends compile)
+ 
+For example:
+	
+	dependencies {
+		testCompile "typescript:mocha:1.17.1"
+	}
