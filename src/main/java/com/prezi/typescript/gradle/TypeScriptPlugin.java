@@ -106,7 +106,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		binaryContainer.withType(TypeScriptBinaryBase.class).all(new Action<TypeScriptBinaryBase>() {
 			@Override
 			public void execute(TypeScriptBinaryBase binary) {
-				BinaryNamingScheme namingScheme = binary.getNamingScheme();
+				final BinaryNamingScheme namingScheme = binary.getNamingScheme();
 				final TypeScriptCompile compileTask = project.getTasks().create(namingScheme.getTaskName("compile"), TypeScriptCompile.class);
 				compileTask.setDescription("Compiles " + binary);
 				binary.getSource().all(new Action<LanguageSourceSet>() {
@@ -120,14 +120,13 @@ public class TypeScriptPlugin implements Plugin<Project> {
 				compileTask.getConventionMapping().map("outputFile", new Callable<File>() {
 					@Override
 					public File call() throws Exception {
-						return project.file(project.getBuildDir() + "/compiled-typescript/compiled.js");
+						return project.file(project.getBuildDir() + "/compiled-typescript/" + namingScheme.getOutputDirectoryBase() + "/compiled.js");
 					}
 				});
 				binary.setCompileTask(compileTask);
 				binary.builtBy(compileTask);
 				logger.debug("Added compile task {} for binary {} in {}", compileTask, binary, project.getPath());
 			}
-
 		});
 	}
 
