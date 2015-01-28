@@ -12,7 +12,7 @@ import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.SourceTask;
@@ -125,7 +125,7 @@ public class TypeScriptCompile extends SourceTask {
 		setOutputFile(getProject().file(file));
 	}
 
-	@InputFile
+	@InputDirectory
 	public File getCompilerPath() {
 		return compilerPath;
 	}
