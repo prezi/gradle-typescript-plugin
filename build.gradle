@@ -37,9 +37,9 @@ dependencies {
 	compile "commons-lang:commons-lang:2.6"
 	compile "commons-io:commons-io:2.4"
 
-	testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
-	// Override the one from Spock
-	testCompile "org.codehaus.groovy:groovy-all:2.3.3"
+	testCompile "org.spockframework:spock-core:0.7-groovy-2.0", {
+		exclude group: "org.codehaus.groovy"
+	}
 }
 
 javadoc {
@@ -145,5 +145,5 @@ if (signArtifacts) {
 tasks.withType(Upload).all { it.dependsOn "check" }
 
 task wrapper(type: Wrapper) {
-	gradleVersion = "2.0"
+	gradleVersion = "2.2.1"
 }
