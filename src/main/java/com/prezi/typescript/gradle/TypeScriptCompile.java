@@ -12,6 +12,7 @@ import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.SourceTask;
@@ -33,6 +34,7 @@ public class TypeScriptCompile extends SourceTask {
 	private boolean strict = false;
 	private Set<String> flagList = Sets.newLinkedHashSet();
 	private File outputFile;
+	private File compilerPath;
 
 	@InputFiles
 	public FileCollection getPrependFiles() {
@@ -123,6 +125,19 @@ public class TypeScriptCompile extends SourceTask {
 		setOutputFile(getProject().file(file));
 	}
 
+	@InputFile
+	public File getCompilerPath() {
+		return compilerPath;
+	}
+
+	public void setCompilerPath(Object compilerPath) {
+		this.compilerPath = getProject().file(compilerPath);
+	}
+
+	public void compilerPath(Object compilerPath) {
+		setCompilerPath(compilerPath);
+	}
+
 	@TaskAction
 	public void run() throws IOException, InterruptedException {
 		File tempDir = getTemporaryDir();
@@ -157,7 +172,15 @@ public class TypeScriptCompile extends SourceTask {
 	}
 
 	private List<String> compileCommand(File tscOutput) {
-		List<String> command = Lists.newArrayList("tsc", "--out", tscOutput.getAbsolutePath());
+		List<String> command = Lists.newArrayList();
+
+		if (getCompilerPath() != null) {
+			command.add(new File(getCompilerPath(), "bin/tsc").getPath());
+		} else {
+			command.add("tsc");
+		}
+
+		command.addAll(Arrays.asList("--out", tscOutput.getAbsolutePath()));
 
 		command.addAll(Arrays.asList("--target", getTarget()));
 
