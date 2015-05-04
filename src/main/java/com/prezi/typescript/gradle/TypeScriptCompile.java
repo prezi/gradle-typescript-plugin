@@ -11,12 +11,7 @@ import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputDirectory;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.SourceTask;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -126,6 +121,7 @@ public class TypeScriptCompile extends SourceTask {
 	}
 
 	@InputDirectory
+    @Optional
 	public File getCompilerPath() {
 		return compilerPath;
 	}
