@@ -33,28 +33,29 @@ model {
 		given:
 		buildFile << """
 apply plugin: "typescript"
-
-model {
-	components {
-		main {
-			sources {
-				typescript(com.prezi.typescript.gradle.TypeScriptLanguageSourceSet)
-			}
-		}
-	}
-}
-
 """
 		when:
 		def result = runTasksSuccessfully "components"
 		then:
 		result.standardOutput.contains(toPlatformLineSeparators("""
-DefaultTypeScriptComponent 'main'
----------------------------------
+JavaScript code 'main'
+----------------------
 
 Source sets
     DefaultTypeScriptLanguageSourceSet 'main:typescript'
         srcDir: src${File.separator}main${File.separator}typescript
+"""))
+	}
+
+	def "will generate the right tasks"() {
+		given:
+		buildFile << """
+apply plugin: "typescript"
+"""
+		when:
+		def result = runTasksSuccessfully "tasks", "--all"
+		then:
+		result.standardOutput.contains(toPlatformLineSeparators("""
 """))
 	}
 }

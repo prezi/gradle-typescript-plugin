@@ -2,5 +2,5 @@ package com.prezi.typescript.gradle;
 
 import org.gradle.platform.base.ComponentSpec;
 
-public interface TypeScriptComponent extends ComponentSpec {
+public interface JavaScriptComponent extends ComponentSpec {
 }
