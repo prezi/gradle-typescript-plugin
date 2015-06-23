@@ -46,12 +46,12 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		}
 
 		@ComponentType
-		void registerComponentType(ComponentTypeBuilder<JavaScriptLibrary> builder) {
-			builder.defaultImplementation(DefaultJavaScriptLibrary.class);
+		void registerComponentType(ComponentTypeBuilder<JavaScriptLibrarySpec> builder) {
+			builder.defaultImplementation(DefaultJavaScriptLibrarySpec.class);
 		}
 
 		@Mutate
-		void createMainComponent(ModelMap<JavaScriptLibrary> components) {
+		void createMainComponent(ModelMap<JavaScriptLibrarySpec> components) {
 			components.create("main");
 		}
 
@@ -71,7 +71,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		}
 
 		@ComponentBinaries
-		public void createBinaries(ModelMap<JavaScriptBinarySpec> binaries, JavaScriptLibrary javaScriptLibrary,
+		public void createBinaries(ModelMap<JavaScriptBinarySpec> binaries, JavaScriptLibrarySpec javaScriptLibrary,
 								   BinaryNamingSchemeBuilder namingSchemeBuilder,
 								   @Path("buildDir") File buildDir) {
 
@@ -86,7 +86,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 			});
 		}
 
-		private static String createBinaryName(JavaScriptLibrary javaScriptLibrary, BinaryNamingSchemeBuilder namingSchemeBuilder) {
+		private static String createBinaryName(JavaScriptLibrarySpec javaScriptLibrary, BinaryNamingSchemeBuilder namingSchemeBuilder) {
 			BinaryNamingSchemeBuilder componentBuilder = namingSchemeBuilder
 					.withComponentName(javaScriptLibrary.getName())
 					.withTypeString("js");

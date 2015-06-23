@@ -29,7 +29,7 @@ model {
 		runTasksSuccessfully "printLanguages"
 	}
 
-	def "can add typescript sourceSet to component"() {
+	def "default binaries and source sets are created"() {
 		given:
 		buildFile << """
 apply plugin: "typescript"
@@ -62,4 +62,21 @@ apply plugin: "typescript"
 		result.standardOutput.contains(toPlatformLineSeparators("""
 """))
 	}
+
+	def "binary can be created"() {
+		given:
+		buildFile << """
+apply plugin: "typescript"
+"""
+
+		file("${projectDir}/src/main/typescript/main.ts") << """
+console.log("Hello World!");
+"""
+		when:
+		def result = runTasksSuccessfully "mainJs"
+		then:
+		result.standardOutput.contains(toPlatformLineSeparators("""
+"""))
+	}
+
 }
