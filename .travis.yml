@@ -5,3 +5,7 @@ jdk:
 env:
   global:
     - TERM=dumb
+before_install:
+  # TypeScript
+  - npm install -g typescript
+  - tsc --version
