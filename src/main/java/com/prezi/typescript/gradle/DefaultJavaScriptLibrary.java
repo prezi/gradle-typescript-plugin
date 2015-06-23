@@ -6,10 +6,10 @@ import org.gradle.platform.base.component.BaseComponentSpec;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class DefaultJavaScriptComponent extends BaseComponentSpec implements JavaScriptComponent {
+public class DefaultJavaScriptLibrary extends BaseComponentSpec implements JavaScriptLibrary {
 	private final Set<Class<? extends TransformationFileType>> languageOutputs = new LinkedHashSet<Class<? extends TransformationFileType>>();
 
-	public DefaultJavaScriptComponent() {
+	public DefaultJavaScriptLibrary() {
 		this.languageOutputs.add(JavaScriptCode.class);
 	}
 

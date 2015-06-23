@@ -1,28 +1,33 @@
 package com.prezi.typescript.gradle;
 
+import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.internal.service.ServiceRegistry;
-import org.gradle.jvm.JarBinarySpec;
-import org.gradle.jvm.internal.DefaultJarBinarySpec;
 import org.gradle.language.base.LanguageSourceSet;
 import org.gradle.language.base.internal.SourceTransformTaskConfig;
 import org.gradle.language.base.internal.registry.LanguageTransform;
 import org.gradle.language.base.internal.registry.LanguageTransformContainer;
+import org.gradle.model.Model;
 import org.gradle.model.ModelMap;
 import org.gradle.model.Mutate;
+import org.gradle.model.Path;
 import org.gradle.model.RuleSource;
 import org.gradle.platform.base.BinarySpec;
 import org.gradle.platform.base.BinaryType;
 import org.gradle.platform.base.BinaryTypeBuilder;
+import org.gradle.platform.base.ComponentBinaries;
 import org.gradle.platform.base.ComponentType;
 import org.gradle.platform.base.ComponentTypeBuilder;
 import org.gradle.platform.base.LanguageType;
 import org.gradle.platform.base.LanguageTypeBuilder;
+import org.gradle.platform.base.internal.BinaryNamingSchemeBuilder;
+import org.gradle.platform.base.internal.DefaultBinaryNamingSchemeBuilder;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 
@@ -41,8 +46,18 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		}
 
 		@ComponentType
-		void registerComponentType(ComponentTypeBuilder<JavaScriptComponent> builder) {
-			builder.defaultImplementation(DefaultJavaScriptComponent.class);
+		void registerComponentType(ComponentTypeBuilder<JavaScriptLibrary> builder) {
+			builder.defaultImplementation(DefaultJavaScriptLibrary.class);
+		}
+
+		@Mutate
+		void createMainComponent(ModelMap<JavaScriptLibrary> components) {
+			components.create("main");
+		}
+
+		@Mutate
+		void registerLanguageTransform(LanguageTransformContainer languages, ServiceRegistry serviceRegistry) {
+			languages.add(new TypeScript());
 		}
 
 		@BinaryType
@@ -50,14 +65,32 @@ public class TypeScriptPlugin implements Plugin<Project> {
 			builder.defaultImplementation(DefaultJavaScriptBinarySpec.class);
 		}
 
-		@Mutate
-		void createSampleComponentComponents(ModelMap<JavaScriptComponent> components) {
-			components.create("main");
+		@Model
+		BinaryNamingSchemeBuilder binaryNamingSchemeBuilder() {
+			return new DefaultBinaryNamingSchemeBuilder();
 		}
 
-		@Mutate
-		void registerLanguageTransform(LanguageTransformContainer languages, ServiceRegistry serviceRegistry) {
-			languages.add(new TypeScript());
+		@ComponentBinaries
+		public void createBinaries(ModelMap<JavaScriptBinarySpec> binaries, JavaScriptLibrary javaScriptLibrary,
+								   BinaryNamingSchemeBuilder namingSchemeBuilder,
+								   @Path("buildDir") File buildDir) {
+
+			final File binariesDir = new File(buildDir, "compiled-javascript");
+
+			final String binaryName = createBinaryName(javaScriptLibrary, namingSchemeBuilder);
+			binaries.create(binaryName, new Action<JavaScriptBinarySpec>() {
+				@Override
+				public void execute(JavaScriptBinarySpec binary) {
+					binary.setJavaScriptFile(new File(binariesDir, String.format("%s/%s.js", binary.getName(), binary.getName())));
+				}
+			});
+		}
+
+		private static String createBinaryName(JavaScriptLibrary javaScriptLibrary, BinaryNamingSchemeBuilder namingSchemeBuilder) {
+			BinaryNamingSchemeBuilder componentBuilder = namingSchemeBuilder
+					.withComponentName(javaScriptLibrary.getName())
+					.withTypeString("js");
+			return componentBuilder.build().getLifecycleTaskName();
 		}
 	}
 
