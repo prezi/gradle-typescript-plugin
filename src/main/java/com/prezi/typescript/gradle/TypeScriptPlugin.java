@@ -1,6 +1,5 @@
 package com.prezi.typescript.gradle;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -8,7 +7,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.BasePlugin;
-import org.gradle.api.tasks.Copy;
 import org.gradle.internal.service.ServiceRegistry;
 import org.gradle.language.base.LanguageSourceSet;
 import org.gradle.language.base.internal.SourceTransformTaskConfig;
@@ -32,10 +30,6 @@ import org.gradle.platform.base.internal.BinaryNamingSchemeBuilder;
 import org.gradle.platform.base.internal.DefaultBinaryNamingSchemeBuilder;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -99,22 +93,12 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		@BinaryTasks
 		public void createTasks(ModelMap<Task> tasks, final JavaScriptBinarySpec binary) {
 			String taskName = "create" + StringUtils.capitalize(binary.getName());
-			tasks.create(taskName, DefaultTask.class, new Action<DefaultTask>() {
+			tasks.create(taskName, JavaScriptCombine.class, new Action<JavaScriptCombine>() {
 				@Override
-				public void execute(DefaultTask copy) {
-					copy.setDescription(String.format("Creates the binary file for %s.", binary));
-					copy.doLast(new Action<Task>() {
-						@Override
-						public void execute(Task task) {
-							task.getProject().delete(binary.getJavaScriptFile());
-							task.getProject().mkdir(binary.getJavaScriptFile().getParentFile());
-							try {
-								FileUtils.copyFile(binary.getCompileOutputFile(), binary.getJavaScriptFile());
-							} catch (IOException e) {
-								throw new RuntimeException(e);
-							}
-						}
-					});
+				public void execute(JavaScriptCombine combine) {
+					combine.setDescription(String.format("Creates the binary file for %s.", binary));
+					combine.setInputFile(binary.getCompileOutputFile());
+					combine.setOutputFile(binary.getJavaScriptFile());
 				}
 			});
 		}

@@ -22,30 +22,12 @@ import java.util.Set;
 public class TypeScriptCompile extends SourceTask {
 	private static final Set<String> VALID_TARGETS = ImmutableSet.of("ES3", "ES5", "ES6");
 
-	private final Set<Object> prependFiles = Sets.newLinkedHashSet();
-	private final Set<Object> appendFiles = Sets.newLinkedHashSet();
 	private String target = "ES5";
 	private boolean enableComments = false;
 	private boolean strict = false;
 	private Set<String> flagList = Sets.newLinkedHashSet();
 	private File outputFile;
 	private File compilerPath;
-
-	@InputFiles
-	public FileCollection getPrependFiles() {
-		return getProject().files(prependFiles);
-	}
-	public void prependJs(Object... files) {
-		prependFiles.addAll(Arrays.asList(files));
-	}
-
-	@InputFiles
-	public FileCollection getAppendFiles() {
-		return getProject().files(appendFiles);
-	}
-	public void appendJs(Object... files) {
-		appendFiles.addAll(Arrays.asList(files));
-	}
 
 	@Input
 	public String getTarget() {
@@ -136,9 +118,7 @@ public class TypeScriptCompile extends SourceTask {
 
 	@TaskAction
 	public void run() throws IOException, InterruptedException {
-		File tempDir = getTemporaryDir();
-		File tscOutput = new File(tempDir, "typescript-output.js");
-		List<String> command = compileCommand(tscOutput);
+		List<String> command = compileCommand();
 
 		try {
 			getLogger().info("Executing {}", Joiner.on(" ").join(command));
@@ -154,20 +134,9 @@ public class TypeScriptCompile extends SourceTask {
 		} catch (IOException e) {
 			throw new IOException("Cannot run tsc. Try installing it with\n\n\tnpm install -g typescript", e);
 		}
-
-		File outputFile = getOutputFile();
-		FileUtils.deleteQuietly(outputFile);
-		CharSink output = Files.asCharSink(outputFile, Charsets.UTF_8, FileWriteMode.APPEND);
-		for (File file : getPrependFiles()) {
-			Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
-		}
-		Files.asCharSource(tscOutput, Charsets.UTF_8).copyTo(output);
-		for (File file : getAppendFiles()) {
-			Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
-		}
 	}
 
-	private List<String> compileCommand(File tscOutput) {
+	private List<String> compileCommand() {
 		List<String> command = Lists.newArrayList();
 
 		if (getCompilerPath() != null) {
@@ -176,7 +145,7 @@ public class TypeScriptCompile extends SourceTask {
 			command.add("tsc");
 		}
 
-		command.addAll(Arrays.asList("--out", tscOutput.getAbsolutePath()));
+		command.addAll(Arrays.asList("--out", getOutputFile().getAbsolutePath()));
 
 		command.addAll(Arrays.asList("--target", getTarget()));
 

@@ -7,9 +7,6 @@ import static org.gradle.util.TextUtil.toPlatformLineSeparators
 class TypeScriptIntegrationTest extends IntegrationSpec {
 	def setup() {
 		System.setProperty("org.gradle.model.dsl", "true");
-		file("src/main/typescript/main.ts") << """
-console.log("Hello World!");
-"""
 	}
 
 	def "registers language in languageRegistry"(){
@@ -59,10 +56,16 @@ Binaries
 		buildFile << """
 apply plugin: "typescript"
 """
+		createTypeScriptSources()
+
 		when:
 		def result = runTasksSuccessfully "tasks", "--all"
+
 		then:
 		result.standardOutput.contains(toPlatformLineSeparators("""
+mainJs - Assembles DefaultJavaScriptBinarySpec 'mainJs'.
+    compileMainJsMainTypescript - Compiles DefaultTypeScriptLanguageSourceSet 'main:typescript'.
+    createMainJs - Creates the binary file for DefaultJavaScriptBinarySpec 'mainJs'.
 """))
 	}
 
@@ -71,12 +74,19 @@ apply plugin: "typescript"
 		buildFile << """
 apply plugin: "typescript"
 """
+		createTypeScriptSources()
 
 		when:
 		def result = runTasksSuccessfully "mainJs"
+
 		then:
-		result.standardOutput.contains(toPlatformLineSeparators("""
-"""))
+		file("build/compiled-javascript/mainJs/mainJs.js").text.trim() == """console.log("Hello World!");"""
+		file("build/javascript-binaries/mainJs/mainJs.js").text.trim() == """console.log("Hello World!");"""
 	}
 
+	private createTypeScriptSources() {
+		file("src/main/typescript/main.ts") << """
+console.log("Hello World!");
+"""
+	}
 }
