@@ -1,11 +1,14 @@
 package com.prezi.typescript.gradle;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.BasePlugin;
+import org.gradle.api.tasks.Copy;
 import org.gradle.internal.service.ServiceRegistry;
 import org.gradle.language.base.LanguageSourceSet;
 import org.gradle.language.base.internal.SourceTransformTaskConfig;
@@ -17,6 +20,7 @@ import org.gradle.model.Mutate;
 import org.gradle.model.Path;
 import org.gradle.model.RuleSource;
 import org.gradle.platform.base.BinarySpec;
+import org.gradle.platform.base.BinaryTasks;
 import org.gradle.platform.base.BinaryType;
 import org.gradle.platform.base.BinaryTypeBuilder;
 import org.gradle.platform.base.ComponentBinaries;
@@ -28,6 +32,10 @@ import org.gradle.platform.base.internal.BinaryNamingSchemeBuilder;
 import org.gradle.platform.base.internal.DefaultBinaryNamingSchemeBuilder;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -75,13 +83,38 @@ public class TypeScriptPlugin implements Plugin<Project> {
 								   BinaryNamingSchemeBuilder namingSchemeBuilder,
 								   @Path("buildDir") File buildDir) {
 
-			final File binariesDir = new File(buildDir, "compiled-javascript");
+			final File compileDir = new File(buildDir, "compiled-javascript");
+			final File binariesDir = new File(buildDir, "javascript-binaries");
 
-			final String binaryName = createBinaryName(javaScriptLibrary, namingSchemeBuilder);
+			String binaryName = createBinaryName(javaScriptLibrary, namingSchemeBuilder);
 			binaries.create(binaryName, new Action<JavaScriptBinarySpec>() {
 				@Override
 				public void execute(JavaScriptBinarySpec binary) {
+					binary.setCompileOutputFile(new File(compileDir, String.format("%s/%s.js", binary.getName(), binary.getName())));
 					binary.setJavaScriptFile(new File(binariesDir, String.format("%s/%s.js", binary.getName(), binary.getName())));
+				}
+			});
+		}
+
+		@BinaryTasks
+		public void createTasks(ModelMap<Task> tasks, final JavaScriptBinarySpec binary) {
+			String taskName = "create" + StringUtils.capitalize(binary.getName());
+			tasks.create(taskName, DefaultTask.class, new Action<DefaultTask>() {
+				@Override
+				public void execute(DefaultTask copy) {
+					copy.setDescription(String.format("Creates the binary file for %s.", binary));
+					copy.doLast(new Action<Task>() {
+						@Override
+						public void execute(Task task) {
+							task.getProject().delete(binary.getJavaScriptFile());
+							task.getProject().mkdir(binary.getJavaScriptFile().getParentFile());
+							try {
+								FileUtils.copyFile(binary.getCompileOutputFile(), binary.getJavaScriptFile());
+							} catch (IOException e) {
+								throw new RuntimeException(e);
+							}
+						}
+					});
 				}
 			});
 		}
@@ -99,12 +132,12 @@ public class TypeScriptPlugin implements Plugin<Project> {
 			return TypeScriptLanguageSourceSet.class;
 		}
 
-		public Map<String, Class<?>> getBinaryTools() {
-			return Collections.emptyMap();
-		}
-
 		public Class<JavaScriptCode> getOutputType() {
 			return JavaScriptCode.class;
+		}
+
+		public Map<String, Class<?>> getBinaryTools() {
+			return Collections.emptyMap();
 		}
 
 		public SourceTransformTaskConfig getTransformTask() {
@@ -124,6 +157,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 
 					compile.setDescription(String.format("Compiles %s.", typeScriptSourceSet));
 					compile.setSource(typeScriptSourceSet.getSource());
+					compile.setOutputFile(binary.getCompileOutputFile());
 					compile.dependsOn(typeScriptSourceSet);
 					binary.getTasks().getBuild().dependsOn(compile);
 				}

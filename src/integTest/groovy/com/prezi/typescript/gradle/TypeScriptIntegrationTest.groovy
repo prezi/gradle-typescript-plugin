@@ -7,6 +7,9 @@ import static org.gradle.util.TextUtil.toPlatformLineSeparators
 class TypeScriptIntegrationTest extends IntegrationSpec {
 	def setup() {
 		System.setProperty("org.gradle.model.dsl", "true");
+		file("src/main/typescript/main.ts") << """
+console.log("Hello World!");
+"""
 	}
 
 	def "registers language in languageRegistry"(){
@@ -69,9 +72,6 @@ apply plugin: "typescript"
 apply plugin: "typescript"
 """
 
-		file("${projectDir}/src/main/typescript/main.ts") << """
-console.log("Hello World!");
-"""
 		when:
 		def result = runTasksSuccessfully "mainJs"
 		then:
