@@ -44,6 +44,10 @@ JavaScript code 'main'
 Source sets
     DefaultTypeScriptLanguageSourceSet 'main:typescript'
         srcDir: src${File.separator}main${File.separator}typescript
+
+Binaries
+    DefaultJavaScriptBinarySpec 'mainJs'
+        build using task: :mainJs
 """))
 	}
 
