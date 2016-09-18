@@ -11,11 +11,15 @@ import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -190,10 +194,24 @@ public class TypeScriptCompile extends SourceTask {
 			command.add("--noImplicitAny");
 		}
 
-		for (File sourceFile : getSource().getFiles()) {
+		for (File sourceFile : getFiles(getSource())) {
 			command.add(sourceFile.getAbsolutePath());
 		}
 
 		return command;
+	}
+
+	private List<File> getFiles(FileTree source) {
+		List<File> list = new ArrayList<File>(source.getFiles());
+		// Sorting is beneficial because the order of files matter for the typescript compiler,
+		// and org.gradle.api.file.FileTree's ordering is not defined, can change from system to system
+		Collections.sort(list, new Comparator<File>() {
+			@Override
+			public int compare(File o1, File o2) {
+				// File.compareTo is different on different operating system, string compare is not
+				return o1.getAbsolutePath().compareTo(o2.getAbsolutePath());
+			}
+		});
+		return list;
 	}
 }
