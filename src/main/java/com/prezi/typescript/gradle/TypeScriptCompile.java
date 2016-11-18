@@ -150,8 +150,8 @@ public class TypeScriptCompile extends SourceTask {
 					.command(command)
 					.redirectErrorStream(true)
 					.start();
-			process.waitFor();
 			ByteStreams.copy(process.getInputStream(), System.out);
+			process.waitFor();
 			if (process.exitValue() != 0) {
 				throw new RuntimeException("TypeScript compilation failed: " + process.exitValue());
 			}
