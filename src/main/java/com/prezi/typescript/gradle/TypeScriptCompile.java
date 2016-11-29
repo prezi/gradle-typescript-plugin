@@ -34,6 +34,7 @@ public class TypeScriptCompile extends SourceTask {
 	private Set<String> flagList = Sets.newLinkedHashSet();
 	private File outputFile;
 	private File compilerPath;
+	private SerializableFileComparator serializableFileComparator;
 
 	@InputFiles
 	public FileCollection getPrependFiles() {
@@ -138,6 +139,20 @@ public class TypeScriptCompile extends SourceTask {
 		setCompilerPath(compilerPath);
 	}
 
+	@Input
+	@Optional
+	public SerializableFileComparator getSerializableFileComparator() {
+		return serializableFileComparator;
+	}
+
+	public void setSerializableFileComparator(SerializableFileComparator serializableFileComparator) {
+		this.serializableFileComparator = serializableFileComparator;
+	}
+
+	public void customFileOrderer(SerializableFileComparator serializableFileComparator) {
+		setSerializableFileComparator(serializableFileComparator);
+	}
+
 	@TaskAction
 	public void run() throws IOException, InterruptedException {
 		File tempDir = getTemporaryDir();
@@ -212,6 +227,9 @@ public class TypeScriptCompile extends SourceTask {
 				return o1.getAbsolutePath().compareTo(o2.getAbsolutePath());
 			}
 		});
+		if (serializableFileComparator != null) {
+			Collections.sort(list, serializableFileComparator);
+		}
 		return list;
 	}
 }
