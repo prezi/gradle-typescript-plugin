@@ -10,6 +10,7 @@ import com.google.common.io.CharSink;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
+import org.apache.tools.ant.taskdefs.condition.Os;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.*;
@@ -33,6 +34,7 @@ public class TypeScriptCompile extends SourceTask {
 	private boolean strict = false;
 	private Set<String> flagList = Sets.newLinkedHashSet();
 	private File outputFile;
+	private File winTsFiles;
 	private File compilerPath;
 	private SerializableFileComparator serializableFileComparator;
 
@@ -174,6 +176,10 @@ public class TypeScriptCompile extends SourceTask {
 			throw new IOException("Cannot run tsc. Try installing it with\n\n\tnpm install -g typescript", e);
 		}
 
+		if (winTsFiles != null) {
+			winTsFiles.delete();
+		}
+
 		File outputFile = getOutputFile();
 		FileUtils.deleteQuietly(outputFile);
 		CharSink output = Files.asCharSink(outputFile, Charsets.UTF_8, FileWriteMode.APPEND);
@@ -186,11 +192,14 @@ public class TypeScriptCompile extends SourceTask {
 		}
 	}
 
-	private List<String> compileCommand(File tscOutput) {
+	private List<String> compileCommand(File tscOutput) throws IOException {
 		List<String> command = Lists.newArrayList();
 
 		if (getCompilerPath() != null) {
-			command.add(new File(getCompilerPath(), "bin/tsc").getPath());
+			if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+				command.add("node");
+			}
+			command.add(new File(getCompilerPath(), "./bin/tsc").getPath());
 		} else {
 			command.add("tsc");
 		}
@@ -209,8 +218,21 @@ public class TypeScriptCompile extends SourceTask {
 			command.add("--noImplicitAny");
 		}
 
-		for (File sourceFile : getFiles(getSource())) {
-			command.add(sourceFile.getAbsolutePath());
+		if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+			File tempDir = getTemporaryDir();
+			winTsFiles = new File(tempDir, "ts-files");
+
+			StringBuilder sb = new StringBuilder();
+			for (File sourceFile : getFiles(getSource())) {
+				sb.append(sourceFile.getAbsolutePath());
+				sb.append('\n');
+			}
+			Files.write(sb.toString().getBytes(), winTsFiles);
+			command.add("@" + winTsFiles.getAbsolutePath());
+		} else {
+			for (File sourceFile : getFiles(getSource())) {
+				command.add(sourceFile.getAbsolutePath());
+			}
 		}
 
 		return command;
