@@ -24,7 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-public class TypeScriptCompile extends SourceTask {
+public class TypeScriptCompile extends SourceTask implements NeedsTypeScriptCompilerTask {
 	private static final Set<String> VALID_TARGETS = ImmutableSet.of("ES3", "ES5");
 
 	private final Set<Object> prependFiles = Sets.newLinkedHashSet();
@@ -133,12 +133,12 @@ public class TypeScriptCompile extends SourceTask {
 		return compilerPath;
 	}
 
-	public void setCompilerPath(Object compilerPath) {
-		this.compilerPath = getProject().file(compilerPath);
+	public void setCompilerPath(File compilerPath) {
+		this.compilerPath = compilerPath;
 	}
 
 	public void compilerPath(Object compilerPath) {
-		setCompilerPath(compilerPath);
+		setCompilerPath(getProject().file(compilerPath));
 	}
 
 	@Input
