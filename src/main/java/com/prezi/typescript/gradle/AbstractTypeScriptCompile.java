@@ -136,7 +136,7 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 		}
 	}
 
-	protected List<String> compileCommand(File tscOutput) throws IOException {
+	protected List<String> compileCommand(File tscOutput, boolean generateDts) throws IOException {
 		List<String> command = Lists.newArrayList();
 
 		if (getCompilerPath() != null) {
@@ -148,7 +148,11 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 			command.add("tsc");
 		}
 
-		command.addAll(Arrays.asList("--out", tscOutput.getAbsolutePath()));
+		if (generateDts) {
+			command.addAll(Arrays.asList("--declaration", "--outDir", tscOutput.getAbsolutePath()));
+		} else {
+			command.addAll(Arrays.asList("--out", tscOutput.getAbsolutePath()));
+		}
 
 		command.addAll(Arrays.asList("--target", getTarget()));
 

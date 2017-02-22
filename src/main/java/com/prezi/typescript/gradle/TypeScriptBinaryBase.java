@@ -14,6 +14,7 @@ public class TypeScriptBinaryBase extends AbstractBuildableModelElement implemen
 	private final BinaryNamingScheme namingScheme;
 	private final Configuration configuration;
 	private TypeScriptCompile compileTask;
+	private TypeScriptCompileDts compileDtsTask;
 
 	protected TypeScriptBinaryBase(String parentName, Configuration configuration) {
 		this.configuration = configuration;
@@ -46,6 +47,14 @@ public class TypeScriptBinaryBase extends AbstractBuildableModelElement implemen
 
 	public void setCompileTask(TypeScriptCompile compileTask) {
 		this.compileTask = compileTask;
+	}
+
+	public TypeScriptCompileDts getCompileDtsTask() {
+		return compileDtsTask;
+	}
+
+	public void setCompileDtsTask(TypeScriptCompileDts compileDtsTask) {
+		this.compileDtsTask = compileDtsTask;
 	}
 
 	public Configuration getConfiguration() {

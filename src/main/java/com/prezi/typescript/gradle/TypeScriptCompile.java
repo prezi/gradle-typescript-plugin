@@ -63,7 +63,7 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 	public void run() throws IOException, InterruptedException {
 		File tempDir = getTemporaryDir();
 		File tscOutput = new File(tempDir, "typescript-output.js");
-		List<String> command = compileCommand(tscOutput);
+		List<String> command = compileCommand(tscOutput, false);
 
 		executeCommand(command);
 
