@@ -67,28 +67,34 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		binaryContainer.withType(TypeScriptBinaryBase.class).all(new Action<TypeScriptBinaryBase>() {
 			@Override
 			public void execute(TypeScriptBinaryBase binary) {
-				final BinaryNamingScheme namingScheme = binary.getNamingScheme();
-				final TypeScriptCompile compileTask = project.getTasks().create(namingScheme.getTaskName("compile"), TypeScriptCompile.class);
-				compileTask.setDescription("Compiles " + binary);
-				binary.getSource().all(new Action<LanguageSourceSet>() {
-					@Override
-					public void execute(LanguageSourceSet it) {
-						compileTask.source(it.getSource());
-					}
-				});
-				compileTask.source(binary.getConfiguration());
-				compileTask.dependsOn(binary.getSource());
-				compileTask.getConventionMapping().map("outputFile", new Callable<File>() {
-					@Override
-					public File call() throws Exception {
-						return project.file(project.getBuildDir() + "/compiled-typescript/" + namingScheme.getOutputDirectoryBase() + "/compiled.js");
-					}
-				});
-				binary.setCompileTask(compileTask);
-				binary.builtBy(compileTask);
-				logger.debug("Added compile task {} for binary {} in {}", compileTask, binary, project.getPath());
+				addCompileTask(project, binary);
 			}
 		});
+	}
+
+	private void addCompileTask(final Project project, TypeScriptBinaryBase binary) {
+		final BinaryNamingScheme namingScheme = binary.getNamingScheme();
+		final TypeScriptCompile compileTask = project.getTasks().create(namingScheme.getTaskName("compile"),
+				TypeScriptCompile.class);
+		compileTask.setDescription("Compiles " + binary);
+		binary.getSource().all(new Action<LanguageSourceSet>() {
+			@Override
+			public void execute(LanguageSourceSet it) {
+				compileTask.source(it.getSource());
+			}
+		});
+		compileTask.source(binary.getConfiguration());
+		compileTask.dependsOn(binary.getSource());
+		compileTask.getConventionMapping().map("outputFile", new Callable<File>() {
+			@Override
+			public File call() throws Exception {
+				return project.file(project.getBuildDir() + "/compiled-typescript/"
+						+ namingScheme.getOutputDirectoryBase() + "/compiled.js");
+			}
+		});
+		binary.setCompileTask(compileTask);
+		binary.builtBy(compileTask);
+		logger.debug("Added compile task {} for binary {} in {}", compileTask, binary, project.getPath());
 	}
 
 	private void addStandardBuildTasks(final Project project) {
