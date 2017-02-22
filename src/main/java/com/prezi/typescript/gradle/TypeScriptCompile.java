@@ -24,19 +24,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-public class TypeScriptCompile extends SourceTask implements NeedsTypeScriptCompilerTask {
-	private static final Set<String> VALID_TARGETS = ImmutableSet.of("ES3", "ES5");
+public class TypeScriptCompile extends AbstractTypeScriptCompile {
 
 	private final Set<Object> prependFiles = Sets.newLinkedHashSet();
 	private final Set<Object> appendFiles = Sets.newLinkedHashSet();
-	private String target = "ES5";
-	private boolean enableComments = false;
-	private boolean strict = false;
-	private Set<String> flagList = Sets.newLinkedHashSet();
 	private File outputFile;
-	private File winTsFiles;
-	private File compilerPath;
-	private SerializableFileComparator serializableFileComparator;
 
 	@InputFiles
 	public FileCollection getPrependFiles() {
@@ -54,66 +46,6 @@ public class TypeScriptCompile extends SourceTask implements NeedsTypeScriptComp
 		appendFiles.addAll(Arrays.asList(files));
 	}
 
-	@Input
-	public String getTarget() {
-		return target;
-	}
-
-	public void setTarget(String target) {
-		if (!VALID_TARGETS.contains(target)) {
-			getLogger().warn("Unknown TypeScript target: " + target);
-		}
-		this.target = target;
-	}
-
-	public void target(String target) {
-		setTarget(target);
-	}
-
-	@Input
-	public boolean isEnableComments() {
-		return enableComments;
-	}
-
-	public void setEnableComments(boolean enableComments) {
-		this.enableComments = enableComments;
-	}
-
-	public void enableComments(boolean enableComments) {
-		setEnableComments(enableComments);
-	}
-
-	@Input
-	public boolean isStrict() {
-		return strict;
-	}
-
-	public void setStrict(boolean strict) {
-		this.strict = strict;
-	}
-
-	public void strict(boolean strict) {
-		setStrict(strict);
-	}
-
-	@Input
-	public Set<String> getFlagList() {
-		return flagList;
-	}
-
-	public void setFlagList(Set<String> flagList) {
-		this.flagList = flagList;
-	}
-
-	public void flag(String... flag) {
-		flagList.addAll(Arrays.asList(flag));
-	}
-
-	@Deprecated
-	public void setFlags(String flags) {
-		flag(flags.split(" "));
-	}
-
 	@OutputFile
 	public File getOutputFile() {
 		return outputFile;
@@ -127,58 +59,13 @@ public class TypeScriptCompile extends SourceTask implements NeedsTypeScriptComp
 		setOutputFile(getProject().file(file));
 	}
 
-	@InputDirectory
-    @Optional
-	public File getCompilerPath() {
-		return compilerPath;
-	}
-
-	public void setCompilerPath(File compilerPath) {
-		this.compilerPath = compilerPath;
-	}
-
-	public void compilerPath(Object compilerPath) {
-		setCompilerPath(getProject().file(compilerPath));
-	}
-
-	@Input
-	@Optional
-	public SerializableFileComparator getSerializableFileComparator() {
-		return serializableFileComparator;
-	}
-
-	public void setSerializableFileComparator(SerializableFileComparator serializableFileComparator) {
-		this.serializableFileComparator = serializableFileComparator;
-	}
-
-	public void customFileOrderer(SerializableFileComparator serializableFileComparator) {
-		setSerializableFileComparator(serializableFileComparator);
-	}
-
 	@TaskAction
 	public void run() throws IOException, InterruptedException {
 		File tempDir = getTemporaryDir();
 		File tscOutput = new File(tempDir, "typescript-output.js");
 		List<String> command = compileCommand(tscOutput);
 
-		try {
-			getLogger().info("Executing {}", Joiner.on(" ").join(command));
-			Process process = new ProcessBuilder()
-					.command(command)
-					.redirectErrorStream(true)
-					.start();
-			ByteStreams.copy(process.getInputStream(), System.out);
-			process.waitFor();
-			if (process.exitValue() != 0) {
-				throw new RuntimeException("TypeScript compilation failed: " + process.exitValue());
-			}
-		} catch (IOException e) {
-			throw new IOException("Cannot run tsc. Try installing it with\n\n\tnpm install -g typescript", e);
-		}
-
-		if (winTsFiles != null) {
-			winTsFiles.delete();
-		}
+		executeCommand(command);
 
 		File outputFile = getOutputFile();
 		FileUtils.deleteQuietly(outputFile);
@@ -192,66 +79,4 @@ public class TypeScriptCompile extends SourceTask implements NeedsTypeScriptComp
 		}
 	}
 
-	private List<String> compileCommand(File tscOutput) throws IOException {
-		List<String> command = Lists.newArrayList();
-
-		if (getCompilerPath() != null) {
-			if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-				command.add("node");
-			}
-			command.add(new File(getCompilerPath(), "./bin/tsc").getPath());
-		} else {
-			command.add("tsc");
-		}
-
-		command.addAll(Arrays.asList("--out", tscOutput.getAbsolutePath()));
-
-		command.addAll(Arrays.asList("--target", getTarget()));
-
-		command.addAll(getFlagList());
-
-		if (!isEnableComments()) {
-			command.add("--removeComments");
-		}
-
-		if (isStrict()) {
-			command.add("--noImplicitAny");
-		}
-
-		if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-			File tempDir = getTemporaryDir();
-			winTsFiles = new File(tempDir, "ts-files");
-
-			StringBuilder sb = new StringBuilder();
-			for (File sourceFile : getFiles(getSource())) {
-				sb.append(sourceFile.getAbsolutePath());
-				sb.append('\n');
-			}
-			Files.write(sb.toString().getBytes(), winTsFiles);
-			command.add("@" + winTsFiles.getAbsolutePath());
-		} else {
-			for (File sourceFile : getFiles(getSource())) {
-				command.add(sourceFile.getAbsolutePath());
-			}
-		}
-
-		return command;
-	}
-
-	private List<File> getFiles(FileTree source) {
-		List<File> list = new ArrayList<File>(source.getFiles());
-		// Sorting is beneficial because the order of files matter for the typescript compiler,
-		// and org.gradle.api.file.FileTree's ordering is not defined, can change from system to system
-		Collections.sort(list, new Comparator<File>() {
-			@Override
-			public int compare(File o1, File o2) {
-				// File.compareTo is different on different operating system, string compare is not
-				return o1.getAbsolutePath().compareTo(o2.getAbsolutePath());
-			}
-		});
-		if (serializableFileComparator != null) {
-			Collections.sort(list, serializableFileComparator);
-		}
-		return list;
-	}
 }
