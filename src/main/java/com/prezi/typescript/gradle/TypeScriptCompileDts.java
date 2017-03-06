@@ -3,6 +3,8 @@ package com.prezi.typescript.gradle;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
+import org.apache.commons.io.FileUtils;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
@@ -21,7 +23,11 @@ public class TypeScriptCompileDts extends AbstractTypeScriptCompile {
 
     @TaskAction
     public void run() throws IOException, InterruptedException {
-        List<String> command = compileCommand(getOutputDir(), true);
+        File outputDir = getOutputDir();
+        FileUtils.deleteQuietly(outputDir);
+        FileUtils.forceMkdir(outputDir);
+
+        List<String> command = compileCommand(outputDir, true);
         executeCommand(command);
     }
 }
