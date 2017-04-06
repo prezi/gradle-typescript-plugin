@@ -3,7 +3,6 @@ package com.prezi.typescript.gradle;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import org.apache.tools.ant.taskdefs.condition.Os;
@@ -23,7 +22,7 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 	private String target = "ES5";
 	private boolean enableComments = false;
 	private boolean strict = false;
-	private Set<String> flagList = Sets.newLinkedHashSet();
+	private List<String> flagList = Lists.newArrayList();
 	private File compilerPath;
 	private SerializableFileComparator serializableFileComparator;
 
@@ -70,11 +69,11 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 	}
 
 	@Input
-	public Set<String> getFlagList() {
+	public List<String> getFlagList() {
 		return flagList;
 	}
 
-	public void setFlagList(Set<String> flagList) {
+	public void setFlagList(List<String> flagList) {
 		this.flagList = flagList;
 	}
 
