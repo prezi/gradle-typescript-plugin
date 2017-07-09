@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeScriptCompilerTask {
-	private static final Set<String> VALID_TARGETS = ImmutableSet.of("ES3", "ES5");
 	private File winTsFiles;
 	private String target = "ES5";
 	private List<String> flagList = Lists.newArrayList();
@@ -30,9 +29,6 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 	}
 
 	public void setTarget(String target) {
-		if (!VALID_TARGETS.contains(target)) {
-			getLogger().warn("Unknown TypeScript target: " + target);
-		}
 		this.target = target;
 	}
 
