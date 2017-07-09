@@ -20,8 +20,6 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 	private static final Set<String> VALID_TARGETS = ImmutableSet.of("ES3", "ES5");
 	private File winTsFiles;
 	private String target = "ES5";
-	private boolean enableComments = false;
-	private boolean strict = false;
 	private List<String> flagList = Lists.newArrayList();
 	private File compilerPath;
 	private SerializableFileComparator serializableFileComparator;
@@ -41,33 +39,6 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 	public void target(String target) {
 		setTarget(target);
 	}
-
-	@Input
-	public boolean isEnableComments() {
-		return enableComments;
-	}
-
-	public void setEnableComments(boolean enableComments) {
-		this.enableComments = enableComments;
-	}
-
-	public void enableComments(boolean enableComments) {
-		setEnableComments(enableComments);
-	}
-
-	@Input
-	public boolean isStrict() {
-		return strict;
-	}
-
-	public void setStrict(boolean strict) {
-		this.strict = strict;
-	}
-
-	public void strict(boolean strict) {
-		setStrict(strict);
-	}
-
 	@Input
 	public List<String> getFlagList() {
 		return flagList;
@@ -156,14 +127,6 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 		command.addAll(Arrays.asList("--target", getTarget()));
 
 		command.addAll(getFlagList());
-
-		if (!isEnableComments()) {
-			command.add("--removeComments");
-		}
-
-		if (isStrict()) {
-			command.add("--noImplicitAny");
-		}
 
 		if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 			File tempDir = getTemporaryDir();
