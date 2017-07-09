@@ -12,8 +12,11 @@ import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.SourceTask;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.*;
 
 public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeScriptCompilerTask {
@@ -81,14 +84,16 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 		setSerializableFileComparator(serializableFileComparator);
 	}
 
-	protected void executeCommand(List<String> command) throws IOException, InterruptedException {
+	protected List<String> executeCommand(List<String> command) throws IOException, InterruptedException {
+		List<String> emittedFiles = Lists.newArrayList();
+
 		try {
 			getLogger().info("Executing {}", Joiner.on(" ").join(command));
 			Process process = new ProcessBuilder()
 					.command(command)
 					.redirectErrorStream(true)
 					.start();
-			ByteStreams.copy(process.getInputStream(), System.out);
+			emittedFiles = filterAndPrintCompilerOutput(process.getInputStream());
 			process.waitFor();
 			if (process.exitValue() != 0) {
 				throw new RuntimeException("TypeScript compilation failed: " + process.exitValue());
@@ -100,9 +105,28 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 				winTsFiles.delete();
 			}
 		}
+
+		return emittedFiles;
 	}
 
-	protected List<String> compileCommand(File tscOutput, boolean generateDts) throws IOException {
+	protected List<String> filterAndPrintCompilerOutput(InputStream output) throws IOException {
+		List<String> emittedFiles = Lists.newArrayList();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(output));
+		String prefix = "TSFILE: ";
+		String line = null;
+
+		while ((line=reader.readLine()) != null) {
+			if (line.startsWith(prefix)) {
+				emittedFiles.add(line.substring(prefix.length()));
+			} else {
+				System.out.println(line);
+			}
+		}
+
+		return emittedFiles;
+	}
+
+	protected List<String> compileCommand(File outDir, boolean generateDts) throws IOException {
 		List<String> command = Lists.newArrayList();
 
 		if (getCompilerPath() != null) {
@@ -114,10 +138,12 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 			command.add("tsc");
 		}
 
+		command.add("--listEmittedFiles");
+
+		command.addAll(Arrays.asList("--outDir", outDir.getAbsolutePath()));
+
 		if (generateDts) {
-			command.addAll(Arrays.asList("--declaration", "--outDir", tscOutput.getAbsolutePath()));
-		} else {
-			command.addAll(Arrays.asList("--out", tscOutput.getAbsolutePath()));
+			command.add("--declaration");
 		}
 
 		command.addAll(Arrays.asList("--target", getTarget()));
