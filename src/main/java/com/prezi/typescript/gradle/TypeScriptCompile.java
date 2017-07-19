@@ -28,7 +28,9 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 
 	private final Set<Object> prependFiles = Sets.newLinkedHashSet();
 	private final Set<Object> appendFiles = Sets.newLinkedHashSet();
-	private File outputFile;
+	private File outputFile = null;
+	private File outputDir;
+	private Boolean generateDeclarations = false;
 
 	@InputFiles
 	public FileCollection getPrependFiles() {
@@ -46,37 +48,63 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 		appendFiles.addAll(Arrays.asList(files));
 	}
 
+	@Input
+	public Boolean getGenerateDeclarations() {
+		return generateDeclarations;
+	}
+
+	public void setGenerateDeclarations(Boolean generate) {
+		generateDeclarations = generate;
+	}
+
 	@OutputFile
-	public File getOutputFile() {
+	@Optional
+	public File getConcatenatedOutputFile() {
 		return outputFile;
 	}
 
-	public void setOutputFile(File outputFile) {
+	public void setConcatenatedOutputFile(File outputFile) {
 		this.outputFile = outputFile;
 	}
 
-	public void outputFile(Object file) {
-		setOutputFile(getProject().file(file));
+	@OutputDirectory
+	public File getOutputDir() {
+		return outputDir;
+	}
+
+	public void setOutputDir(File outputDir) {
+		this.outputDir = outputDir;
 	}
 
 	@TaskAction
 	public void run() throws IOException, InterruptedException {
-		File tempDir = getTemporaryDir();
-		File tscOutput = new File(tempDir, "typescript-output.js");
-		List<String> command = compileCommand(tscOutput, false);
+		File outputDir = getOutputDir();
+		FileUtils.deleteQuietly(outputDir);
+		FileUtils.forceMkdir(outputDir);
 
-		executeCommand(command);
+		List<String> command = compileCommand(outputDir, getGenerateDeclarations());
+		List<String> emittedFiles = executeCommand(command);
 
-		File outputFile = getOutputFile();
+		if (getConcatenatedOutputFile() != null) {
+			doConcatenation(emittedFiles);
+		}
+	}
+
+	private void doConcatenation(List<String> emittedFiles) throws IOException {
+		File outputFile = getConcatenatedOutputFile();
 		FileUtils.deleteQuietly(outputFile);
 		CharSink output = Files.asCharSink(outputFile, Charsets.UTF_8, FileWriteMode.APPEND);
 		for (File file : getPrependFiles()) {
 			Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
 		}
-		Files.asCharSource(tscOutput, Charsets.UTF_8).copyTo(output);
+		for (String path : emittedFiles) {
+			if (path.endsWith(".js")) {
+				File file = new File(path);
+				Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
+			}
+		}
 		for (File file : getAppendFiles()) {
 			Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
 		}
 	}
-
 }

@@ -5,6 +5,7 @@ import com.prezi.typescript.gradle.incubating.BinaryInternal;
 import com.prezi.typescript.gradle.incubating.BinaryNamingScheme;
 import com.prezi.typescript.gradle.incubating.LanguageSourceSet;
 import org.gradle.api.DomainObjectSet;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.internal.DefaultDomainObjectSet;
 
@@ -14,7 +15,7 @@ public class TypeScriptBinaryBase extends AbstractBuildableModelElement implemen
 	private final BinaryNamingScheme namingScheme;
 	private final Configuration configuration;
 	private TypeScriptCompile compileTask;
-	private TypeScriptCompileDts compileDtsTask;
+	private Task compileDtsTask;
 
 	protected TypeScriptBinaryBase(String parentName, Configuration configuration) {
 		this.configuration = configuration;
@@ -49,11 +50,11 @@ public class TypeScriptBinaryBase extends AbstractBuildableModelElement implemen
 		this.compileTask = compileTask;
 	}
 
-	public TypeScriptCompileDts getCompileDtsTask() {
+	public Task getCompileDtsTask() {
 		return compileDtsTask;
 	}
 
-	public void setCompileDtsTask(TypeScriptCompileDts compileDtsTask) {
+	public void setCompileDtsTask(Task compileDtsTask) {
 		this.compileDtsTask = compileDtsTask;
 	}
 
