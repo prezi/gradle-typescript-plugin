@@ -92,7 +92,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 						+ namingScheme.getOutputDirectoryBase() + "/");
 			}
 		});
-		compileTask.getConventionMapping().map("outputFile", new Callable<File>() {
+		compileTask.getConventionMapping().map("concatenatedOutputFile", new Callable<File>() {
 			@Override
 			public File call() throws Exception {
 				return new File(compileTask.getOutputDir(), "_js_concatenated.js");

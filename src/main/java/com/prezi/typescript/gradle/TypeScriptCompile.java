@@ -28,7 +28,7 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 
 	private final Set<Object> prependFiles = Sets.newLinkedHashSet();
 	private final Set<Object> appendFiles = Sets.newLinkedHashSet();
-	private File outputFile;
+	private File outputFile = null;
 	private File outputDir;
 	private Boolean generateDeclarations = false;
 
@@ -58,11 +58,12 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 	}
 
 	@OutputFile
-	public File getOutputFile() {
+	@Optional
+	public File getConcatenatedOutputFile() {
 		return outputFile;
 	}
 
-	public void setOutputFile(File outputFile) {
+	public void setConcatenatedOutputFile(File outputFile) {
 		this.outputFile = outputFile;
 	}
 
@@ -79,12 +80,18 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 	public void run() throws IOException, InterruptedException {
 		File outputDir = getOutputDir();
 		FileUtils.deleteQuietly(outputDir);
-        FileUtils.forceMkdir(outputDir);
+		FileUtils.forceMkdir(outputDir);
 
 		List<String> command = compileCommand(outputDir, getGenerateDeclarations());
 		List<String> emittedFiles = executeCommand(command);
 
-		File outputFile = getOutputFile();
+		if (getConcatenatedOutputFile() != null) {
+			doConcatenation(emittedFiles);
+		}
+	}
+
+	private void doConcatenation(List<String> emittedFiles) throws IOException {
+		File outputFile = getConcatenatedOutputFile();
 		FileUtils.deleteQuietly(outputFile);
 		CharSink output = Files.asCharSink(outputFile, Charsets.UTF_8, FileWriteMode.APPEND);
 		for (File file : getPrependFiles()) {
