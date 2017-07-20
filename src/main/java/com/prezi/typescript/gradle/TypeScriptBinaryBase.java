@@ -48,6 +48,7 @@ public class TypeScriptBinaryBase extends AbstractBuildableModelElement implemen
 
 	public void setCompileTask(TypeScriptCompile compileTask) {
 		this.compileTask = compileTask;
+		compileTask.setIsCompilingTests(getIsCompilingTests());
 	}
 
 	public Task getCompileDtsTask() {
@@ -65,5 +66,9 @@ public class TypeScriptBinaryBase extends AbstractBuildableModelElement implemen
 	@Override
 	public String toString() {
 		return namingScheme.getDescription();
+	}
+
+	protected boolean getIsCompilingTests() {
+		return false;
 	}
 }

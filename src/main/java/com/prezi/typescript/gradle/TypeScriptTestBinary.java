@@ -6,4 +6,9 @@ public class TypeScriptTestBinary extends TypeScriptBinaryBase {
 	protected TypeScriptTestBinary(String parentName, Configuration configuration) {
 		super(parentName, configuration);
 	}
+
+	@Override
+	protected boolean getIsCompilingTests() {
+		return true;
+	}
 }

@@ -25,6 +25,7 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 	private List<String> flagList = Lists.newArrayList();
 	private File compilerPath;
 	private SerializableFileComparator serializableFileComparator;
+	private boolean isTestCompile = false;
 
 	@Input
 	public String getTarget() {
@@ -82,6 +83,14 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 
 	public void customFileOrderer(SerializableFileComparator serializableFileComparator) {
 		setSerializableFileComparator(serializableFileComparator);
+	}
+
+	public boolean getIsCompilingTests() {
+		return isTestCompile;
+	}
+
+	public void setIsCompilingTests(boolean isTest) {
+		isTestCompile = isTest;
 	}
 
 	protected List<String> executeCommand(List<String> command) throws IOException, InterruptedException {
