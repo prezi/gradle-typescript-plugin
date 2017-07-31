@@ -85,17 +85,11 @@ public class TypeScriptPlugin implements Plugin<Project> {
 		});
 		compileTask.source(binary.getConfiguration());
 		compileTask.dependsOn(binary.getSource());
-		compileTask.getConventionMapping().map("outputDir", new Callable<File>() {
+		compileTask.getConventionMapping().map("outputFile", new Callable<File>() {
 			@Override
 			public File call() throws Exception {
 				return project.file(project.getBuildDir() + "/compiled-typescript/"
-						+ namingScheme.getOutputDirectoryBase() + "/");
-			}
-		});
-		compileTask.getConventionMapping().map("concatenatedOutputFile", new Callable<File>() {
-			@Override
-			public File call() throws Exception {
-				return new File(compileTask.getOutputDir(), "_js_concatenated.js");
+						+ namingScheme.getOutputDirectoryBase() + "/compiled.js");
 			}
 		});
 		binary.setCompileTask(compileTask);

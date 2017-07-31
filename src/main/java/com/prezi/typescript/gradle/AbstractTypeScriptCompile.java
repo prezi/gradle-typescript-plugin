@@ -12,20 +12,19 @@ import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.SourceTask;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.*;
 
 public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeScriptCompilerTask {
+	private static final Set<String> VALID_TARGETS = ImmutableSet.of("ES3", "ES5");
 	private File winTsFiles;
 	private String target = "ES5";
+	private boolean enableComments = false;
+	private boolean strict = false;
 	private List<String> flagList = Lists.newArrayList();
 	private File compilerPath;
 	private SerializableFileComparator serializableFileComparator;
-	private boolean isTestCompile = false;
 
 	@Input
 	public String getTarget() {
@@ -33,12 +32,42 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 	}
 
 	public void setTarget(String target) {
+		if (!VALID_TARGETS.contains(target)) {
+			getLogger().warn("Unknown TypeScript target: " + target);
+		}
 		this.target = target;
 	}
 
 	public void target(String target) {
 		setTarget(target);
 	}
+
+	@Input
+	public boolean isEnableComments() {
+		return enableComments;
+	}
+
+	public void setEnableComments(boolean enableComments) {
+		this.enableComments = enableComments;
+	}
+
+	public void enableComments(boolean enableComments) {
+		setEnableComments(enableComments);
+	}
+
+	@Input
+	public boolean isStrict() {
+		return strict;
+	}
+
+	public void setStrict(boolean strict) {
+		this.strict = strict;
+	}
+
+	public void strict(boolean strict) {
+		setStrict(strict);
+	}
+
 	@Input
 	public List<String> getFlagList() {
 		return flagList;
@@ -85,24 +114,14 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 		setSerializableFileComparator(serializableFileComparator);
 	}
 
-	public boolean getIsCompilingTests() {
-		return isTestCompile;
-	}
-
-	public void setIsCompilingTests(boolean isTest) {
-		isTestCompile = isTest;
-	}
-
-	protected List<String> executeCommand(List<String> command) throws IOException, InterruptedException {
-		List<String> emittedFiles = Lists.newArrayList();
-
+	protected void executeCommand(List<String> command) throws IOException, InterruptedException {
 		try {
 			getLogger().info("Executing {}", Joiner.on(" ").join(command));
 			Process process = new ProcessBuilder()
 					.command(command)
 					.redirectErrorStream(true)
 					.start();
-			emittedFiles = filterAndPrintCompilerOutput(process.getInputStream());
+			ByteStreams.copy(process.getInputStream(), System.out);
 			process.waitFor();
 			if (process.exitValue() != 0) {
 				throw new RuntimeException("TypeScript compilation failed: " + process.exitValue());
@@ -114,28 +133,9 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 				winTsFiles.delete();
 			}
 		}
-
-		return emittedFiles;
 	}
 
-	protected List<String> filterAndPrintCompilerOutput(InputStream output) throws IOException {
-		List<String> emittedFiles = Lists.newArrayList();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(output));
-		String prefix = "TSFILE: ";
-		String line = null;
-
-		while ((line=reader.readLine()) != null) {
-			if (line.startsWith(prefix)) {
-				emittedFiles.add(line.substring(prefix.length()));
-			} else {
-				System.out.println(line);
-			}
-		}
-
-		return emittedFiles;
-	}
-
-	protected List<String> compileCommand(File outDir, boolean generateDts) throws IOException {
+	protected List<String> compileCommand(File tscOutput, boolean generateDts) throws IOException {
 		List<String> command = Lists.newArrayList();
 
 		if (getCompilerPath() != null) {
@@ -147,17 +147,23 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 			command.add("tsc");
 		}
 
-		command.add("--listEmittedFiles");
-
-		command.addAll(Arrays.asList("--outDir", outDir.getAbsolutePath()));
-
 		if (generateDts) {
-			command.add("--declaration");
+			command.addAll(Arrays.asList("--declaration", "--outDir", tscOutput.getAbsolutePath()));
+		} else {
+			command.addAll(Arrays.asList("--out", tscOutput.getAbsolutePath()));
 		}
 
 		command.addAll(Arrays.asList("--target", getTarget()));
 
 		command.addAll(getFlagList());
+
+		if (!isEnableComments()) {
+			command.add("--removeComments");
+		}
+
+		if (isStrict()) {
+			command.add("--noImplicitAny");
+		}
 
 		if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 			File tempDir = getTemporaryDir();
