@@ -27,7 +27,7 @@ public class TypeScriptCompileDts extends AbstractTypeScriptCompile {
         FileUtils.deleteQuietly(outputDir);
         FileUtils.forceMkdir(outputDir);
 
-        List<String> command = compileCommand(outputDir, true);
+        List<String> command = compileCommand(outputDir, true, false);
         executeCommand(command);
     }
 }
