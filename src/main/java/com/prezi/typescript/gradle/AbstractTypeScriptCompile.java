@@ -135,7 +135,7 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 		return emittedFiles;
 	}
 
-	protected List<String> compileCommand(File outDir, boolean generateDts) throws IOException {
+	protected List<String> compileCommand(File outDirOrFile, boolean generateDts, boolean useOutFile) throws IOException {
 		List<String> command = Lists.newArrayList();
 
 		if (getCompilerPath() != null) {
@@ -149,7 +149,11 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 
 		command.add("--listEmittedFiles");
 
-		command.addAll(Arrays.asList("--outDir", outDir.getAbsolutePath()));
+		if (useOutFile) {
+			command.addAll(Arrays.asList("--outFile", outDirOrFile.getAbsolutePath()));
+		} else {
+			command.addAll(Arrays.asList("--outDir", outDirOrFile.getAbsolutePath()));
+		}
 
 		if (generateDts) {
 			command.add("--declaration");

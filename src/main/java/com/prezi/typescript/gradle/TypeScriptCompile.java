@@ -17,10 +17,7 @@ import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -31,6 +28,7 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 	private File outputFile = null;
 	private File outputDir;
 	private Boolean generateDeclarations = false;
+	private Boolean useOutFile = true;
 
 	@InputFiles
 	public FileCollection getPrependFiles() {
@@ -57,6 +55,15 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 		generateDeclarations = generate;
 	}
 
+	@Input
+	public Boolean getUseOutFile() {
+		return useOutFile;
+	}
+
+	public void setUseOutFile(Boolean value) {
+		this.useOutFile = value;
+	}
+
 	@OutputFile
 	@Optional
 	public File getConcatenatedOutputFile() {
@@ -78,20 +85,32 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 
 	@TaskAction
 	public void run() throws IOException, InterruptedException {
+		boolean useOutFile = getUseOutFile();
+		File concatenatedOutputFile = getConcatenatedOutputFile();
 		File outputDir = getOutputDir();
+		File output;
+
+		if (useOutFile) {
+			if (concatenatedOutputFile == null) {
+				throw new RuntimeException("property useOutFile is set but property concatenatedOutputFile is null");
+			}
+			output = new File(outputDir, "tsc-concatenated.js");
+		} else {
+			output = outputDir;
+		}
+
 		FileUtils.deleteQuietly(outputDir);
 		FileUtils.forceMkdir(outputDir);
 
-		List<String> command = compileCommand(outputDir, getGenerateDeclarations());
+		List<String> command = compileCommand(output, getGenerateDeclarations(), useOutFile);
 		List<String> emittedFiles = executeCommand(command);
 
-		if (getConcatenatedOutputFile() != null) {
-			doConcatenation(emittedFiles);
+		if (concatenatedOutputFile != null) {
+			doConcatenation(emittedFiles, concatenatedOutputFile);
 		}
 	}
 
-	private void doConcatenation(List<String> emittedFiles) throws IOException {
-		File outputFile = getConcatenatedOutputFile();
+	private void doConcatenation(List<String> emittedFiles, File outputFile) throws IOException {
 		FileUtils.deleteQuietly(outputFile);
 		CharSink output = Files.asCharSink(outputFile, Charsets.UTF_8, FileWriteMode.APPEND);
 		for (File file : getPrependFiles()) {
