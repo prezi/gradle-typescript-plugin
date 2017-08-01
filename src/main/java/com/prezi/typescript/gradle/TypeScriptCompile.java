@@ -23,28 +23,10 @@ import java.util.Set;
 
 public class TypeScriptCompile extends AbstractTypeScriptCompile {
 
-	private final Set<Object> prependFiles = Sets.newLinkedHashSet();
-	private final Set<Object> appendFiles = Sets.newLinkedHashSet();
 	private File outputFile = null;
 	private File outputDir;
 	private Boolean generateDeclarations = false;
 	private Boolean useOutFile = true;
-
-	@InputFiles
-	public FileCollection getPrependFiles() {
-		return getProject().files(prependFiles);
-	}
-	public void prependJs(Object... files) {
-		prependFiles.addAll(Arrays.asList(files));
-	}
-
-	@InputFiles
-	public FileCollection getAppendFiles() {
-		return getProject().files(appendFiles);
-	}
-	public void appendJs(Object... files) {
-		appendFiles.addAll(Arrays.asList(files));
-	}
 
 	@Input
 	public Boolean getGenerateDeclarations() {
@@ -94,7 +76,7 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 			if (concatenatedOutputFile == null) {
 				throw new RuntimeException("property useOutFile is set but property concatenatedOutputFile is null");
 			}
-			output = new File(outputDir, "tsc-concatenated.js");
+			output = concatenatedOutputFile;
 		} else {
 			output = outputDir;
 		}
@@ -105,7 +87,7 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 		List<String> command = compileCommand(output, getGenerateDeclarations(), useOutFile);
 		List<String> emittedFiles = executeCommand(command);
 
-		if (concatenatedOutputFile != null) {
+		if (concatenatedOutputFile != null && !useOutFile) {
 			doConcatenation(emittedFiles, concatenatedOutputFile);
 		}
 	}
@@ -113,17 +95,11 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 	private void doConcatenation(List<String> emittedFiles, File outputFile) throws IOException {
 		FileUtils.deleteQuietly(outputFile);
 		CharSink output = Files.asCharSink(outputFile, Charsets.UTF_8, FileWriteMode.APPEND);
-		for (File file : getPrependFiles()) {
-			Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
-		}
-		for (String path : emittedFiles) {
+		for (String path: emittedFiles) {
 			if (path.endsWith(".js")) {
 				File file = new File(path);
 				Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
 			}
-		}
-		for (File file : getAppendFiles()) {
-			Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
 		}
 	}
 }
