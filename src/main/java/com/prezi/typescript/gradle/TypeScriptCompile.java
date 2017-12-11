@@ -27,6 +27,7 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 	private File outputDir;
 	private Boolean generateDeclarations = false;
 	private Boolean useOutFile = true;
+	private List<File> commonJsEntryPoints = null;
 
 	@Input
 	public Boolean getGenerateDeclarations() {
@@ -44,6 +45,22 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 
 	public void setUseOutFile(Boolean value) {
 		this.useOutFile = value;
+	}
+
+	@Input
+	@Optional
+	public List<File> getCommonJsEntryPoints() {
+		return commonJsEntryPoints;
+	}
+
+	public void setCommonJsEntryPoints(File file) {
+		this.commonJsEntryPoints = Lists.newArrayList(file);
+	}
+	public void setCommonJsEntryPoints(List<File> files) {
+		this.commonJsEntryPoints = Lists.newArrayList(files);
+	}
+	public void setCommonJsEntryPoints(FileTree tree) {
+		this.commonJsEntryPoints = Lists.newArrayList(tree.getFiles());
 	}
 
 	@OutputFile
@@ -71,6 +88,11 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 		File concatenatedOutputFile = getConcatenatedOutputFile();
 		File outputDir = getOutputDir();
 		File output;
+
+		if (getCommonJsEntryPoints() != null) {
+			useOutFile = false;
+			concatenatedOutputFile = null;
+		}
 
 		if (useOutFile) {
 			if (concatenatedOutputFile == null) {
@@ -100,6 +122,16 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 				File file = new File(path);
 				Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
 			}
+		}
+	}
+
+	@Override
+	protected List<File> getInputSources() {
+		List<File> entryPoints = getCommonJsEntryPoints();
+		if (entryPoints != null) {
+			return entryPoints;
+		} else {
+			return super.getInputSources();
 		}
 	}
 }

@@ -135,6 +135,10 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 		return emittedFiles;
 	}
 
+	protected List<File> getInputSources() {
+		return getFiles(getSource());
+	}
+
 	protected List<String> compileCommand(File outDirOrFile, boolean generateDts, boolean useOutFile) throws IOException {
 		List<String> command = Lists.newArrayList();
 
@@ -168,14 +172,14 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 			winTsFiles = new File(tempDir, "ts-files");
 
 			StringBuilder sb = new StringBuilder();
-			for (File sourceFile : getFiles(getSource())) {
+			for (File sourceFile : getInputSources()) {
 				sb.append(sourceFile.getAbsolutePath());
 				sb.append('\n');
 			}
 			Files.write(sb.toString().getBytes(), winTsFiles);
 			command.add("@" + winTsFiles.getAbsolutePath());
 		} else {
-			for (File sourceFile : getFiles(getSource())) {
+			for (File sourceFile : getInputSources()) {
 				command.add(sourceFile.getAbsolutePath());
 			}
 		}
