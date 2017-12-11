@@ -17,36 +17,16 @@ import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
 public class TypeScriptCompile extends AbstractTypeScriptCompile {
 
-	private final Set<Object> prependFiles = Sets.newLinkedHashSet();
-	private final Set<Object> appendFiles = Sets.newLinkedHashSet();
 	private File outputFile = null;
 	private File outputDir;
 	private Boolean generateDeclarations = false;
-
-	@InputFiles
-	public FileCollection getPrependFiles() {
-		return getProject().files(prependFiles);
-	}
-	public void prependJs(Object... files) {
-		prependFiles.addAll(Arrays.asList(files));
-	}
-
-	@InputFiles
-	public FileCollection getAppendFiles() {
-		return getProject().files(appendFiles);
-	}
-	public void appendJs(Object... files) {
-		appendFiles.addAll(Arrays.asList(files));
-	}
+	private Boolean useOutFile = true;
 
 	@Input
 	public Boolean getGenerateDeclarations() {
@@ -55,6 +35,15 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 
 	public void setGenerateDeclarations(Boolean generate) {
 		generateDeclarations = generate;
+	}
+
+	@Input
+	public Boolean getUseOutFile() {
+		return useOutFile;
+	}
+
+	public void setUseOutFile(Boolean value) {
+		this.useOutFile = value;
 	}
 
 	@OutputFile
@@ -78,33 +67,39 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 
 	@TaskAction
 	public void run() throws IOException, InterruptedException {
+		boolean useOutFile = getUseOutFile();
+		File concatenatedOutputFile = getConcatenatedOutputFile();
 		File outputDir = getOutputDir();
+		File output;
+
+		if (useOutFile) {
+			if (concatenatedOutputFile == null) {
+				throw new RuntimeException("property useOutFile is set but property concatenatedOutputFile is null");
+			}
+			output = concatenatedOutputFile;
+		} else {
+			output = outputDir;
+		}
+
 		FileUtils.deleteQuietly(outputDir);
 		FileUtils.forceMkdir(outputDir);
 
-		List<String> command = compileCommand(outputDir, getGenerateDeclarations());
+		List<String> command = compileCommand(output, getGenerateDeclarations(), useOutFile);
 		List<String> emittedFiles = executeCommand(command);
 
-		if (getConcatenatedOutputFile() != null) {
-			doConcatenation(emittedFiles);
+		if (concatenatedOutputFile != null && !useOutFile) {
+			doConcatenation(emittedFiles, concatenatedOutputFile);
 		}
 	}
 
-	private void doConcatenation(List<String> emittedFiles) throws IOException {
-		File outputFile = getConcatenatedOutputFile();
+	private void doConcatenation(List<String> emittedFiles, File outputFile) throws IOException {
 		FileUtils.deleteQuietly(outputFile);
 		CharSink output = Files.asCharSink(outputFile, Charsets.UTF_8, FileWriteMode.APPEND);
-		for (File file : getPrependFiles()) {
-			Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
-		}
-		for (String path : emittedFiles) {
+		for (String path: emittedFiles) {
 			if (path.endsWith(".js")) {
 				File file = new File(path);
 				Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
 			}
-		}
-		for (File file : getAppendFiles()) {
-			Files.asCharSource(file, Charsets.UTF_8).copyTo(output);
 		}
 	}
 }
