@@ -1,10 +1,12 @@
 package com.prezi.typescript.gradle;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
+import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.tools.ant.taskdefs.condition.Os;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.Input;
@@ -20,41 +22,32 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeScriptCompilerTask {
-	private File winTsFiles;
-	private String target = "ES5";
-	private List<String> flagList = Lists.newArrayList();
+	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+	private Map<String, Object> compilerOptions = Maps.newHashMap();
 	private File compilerPath;
 	private SerializableFileComparator serializableFileComparator;
 	private boolean isTestCompile = false;
 
 	@Input
-	public String getTarget() {
-		return target;
+	public Map<String, Object> getCompilerOptions() {
+		return compilerOptions;
 	}
 
-	public void setTarget(String target) {
-		this.target = target;
+	public void setCompilerOption(String name, Boolean value) {
+		compilerOptions.put(name, value);
 	}
 
-	public void target(String target) {
-		setTarget(target);
-	}
-	@Input
-	public List<String> getFlagList() {
-		return flagList;
+	public void setCompilerOption(String name, String value) {
+		compilerOptions.put(name, value);
 	}
 
-	public void setFlagList(List<String> flagList) {
-		this.flagList = flagList;
+	public void setCompilerOption(String name, Collection<String> value) {
+		compilerOptions.put(name, value);
 	}
 
-	public void flag(String... flag) {
-		flagList.addAll(Arrays.asList(flag));
-	}
-
-	@Deprecated
-	public void setFlags(String flags) {
-		flag(flags.split(" "));
+	public void setCompilerOption(String name, Map<String, Collection<String>> value) {
+		compilerOptions.put(name, value);
 	}
 
 	@InputDirectory
@@ -109,10 +102,6 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 			}
 		} catch (IOException e) {
 			throw new IOException("Cannot run tsc. Try installing it with\n\n\tnpm install -g typescript", e);
-		} finally {
-			if (winTsFiles != null) {
-				winTsFiles.delete();
-			}
 		}
 
 		return emittedFiles;
@@ -140,8 +129,35 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 	}
 
 	protected List<String> compileCommand(File outDirOrFile, boolean generateDts, boolean useOutFile) throws IOException {
-		List<String> command = Lists.newArrayList();
 
+		Map<String, Object> compilerOptions = Maps.newHashMap(this.compilerOptions);
+
+		compilerOptions.put("listEmittedFiles", Boolean.TRUE);
+
+		if (useOutFile) {
+			compilerOptions.put("outFile", outDirOrFile.getAbsolutePath());
+		} else {
+			compilerOptions.put("outDir", outDirOrFile.getAbsolutePath());
+		}
+
+		if (generateDts) {
+			compilerOptions.put("declaration", Boolean.TRUE);
+		}
+
+		List<String> inputFiles = Lists.newArrayList();
+		for (File sourceFile : getInputSources()) {
+			inputFiles.add(sourceFile.getAbsolutePath());
+		}
+
+		Map<String, Object> tsConfig = Maps.newHashMap();
+		tsConfig.put("compilerOptions", compilerOptions);
+		tsConfig.put("files", inputFiles);
+
+		File tsConfigFile = new File(getTemporaryDir(), "tsconfig.json");
+		FileUtils.deleteQuietly(tsConfigFile);
+		FileUtils.write(tsConfigFile, gson.toJson(tsConfig));
+
+		List<String> command = Lists.newArrayList();
 		if (getCompilerPath() != null) {
 			if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 				command.add("node");
@@ -150,39 +166,8 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 		} else {
 			command.add("tsc");
 		}
-
-		command.add("--listEmittedFiles");
-
-		if (useOutFile) {
-			command.addAll(Arrays.asList("--outFile", outDirOrFile.getAbsolutePath()));
-		} else {
-			command.addAll(Arrays.asList("--outDir", outDirOrFile.getAbsolutePath()));
-		}
-
-		if (generateDts) {
-			command.add("--declaration");
-		}
-
-		command.addAll(Arrays.asList("--target", getTarget()));
-
-		command.addAll(getFlagList());
-
-		if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-			File tempDir = getTemporaryDir();
-			winTsFiles = new File(tempDir, "ts-files");
-
-			StringBuilder sb = new StringBuilder();
-			for (File sourceFile : getInputSources()) {
-				sb.append(sourceFile.getAbsolutePath());
-				sb.append('\n');
-			}
-			Files.write(sb.toString().getBytes(), winTsFiles);
-			command.add("@" + winTsFiles.getAbsolutePath());
-		} else {
-			for (File sourceFile : getInputSources()) {
-				command.add(sourceFile.getAbsolutePath());
-			}
-		}
+		command.add("-p");
+		command.add(tsConfigFile.getAbsolutePath());
 
 		return command;
 	}
