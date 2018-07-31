@@ -12,6 +12,11 @@ The plugin automatically configures the following things:
 * adds `src/main/ts` as the default TypeScript source folder
 * configures a `compile` task to compile TypeScript sources to `build/compiled-typescript/output.js`
 
+## How to release
+ 1. Run: `./gradlew clean uploadArchives -Prelease -Psonatype`
+ 2. Open: https://oss.sonatype.org/#stagingRepositories
+ 3. Find the `comprezi` staging repo, close it and release it.
+
 ## Tasks
 
 ### TypeScriptCompile
@@ -50,9 +55,9 @@ You can add dependencies (like d.ts files) to the build path using these pre-def
 
  * compile
  * testCompile (extends compile)
- 
+
 For example:
-	
+
 	dependencies {
 		testCompile "typescript:mocha:1.17.1"
 	}
