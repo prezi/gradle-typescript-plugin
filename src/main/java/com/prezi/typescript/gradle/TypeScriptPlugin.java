@@ -10,6 +10,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.internal.file.FileResolver;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.internal.reflect.Instantiator;
 import org.slf4j.Logger;
@@ -28,12 +29,12 @@ public class TypeScriptPlugin implements Plugin<Project> {
 	private static final Logger logger = LoggerFactory.getLogger(TypeScriptPlugin.class);
 
 	private final Instantiator instantiator;
-	private final FileResolver fileResolver;
+	private final ObjectFactory objectFactory;
 
 	@Inject
-	public TypeScriptPlugin(Instantiator instantiator, FileResolver fileResolver) {
+	public TypeScriptPlugin(Instantiator instantiator, ObjectFactory objectFactory) {
 		this.instantiator = instantiator;
-		this.fileResolver = fileResolver;
+		this.objectFactory = objectFactory;
 	}
 
 	@Override
@@ -49,7 +50,7 @@ public class TypeScriptPlugin implements Plugin<Project> {
 			public void execute(FunctionalSourceSet functionalSourceSet) {
 				// Inspired by JavaBasePlugin
 				// Add TypeScript source set for "src/<name>/ts"
-				TypeScriptSourceSet typeScriptSourceSet = instantiator.newInstance(TypeScriptSourceSet.class, "typescript", functionalSourceSet, fileResolver);
+				TypeScriptSourceSet typeScriptSourceSet = instantiator.newInstance(TypeScriptSourceSet.class, "typescript", functionalSourceSet, objectFactory);
 				typeScriptSourceSet.getSource().srcDir(String.format("src/%s/ts", functionalSourceSet.getName()));
 				functionalSourceSet.add(typeScriptSourceSet);
 				logger.debug("Added {} in {}", typeScriptSourceSet, project.getPath());

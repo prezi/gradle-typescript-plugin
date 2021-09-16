@@ -8,6 +8,7 @@ import com.prezi.typescript.gradle.incubating.ProjectSourceSet;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.internal.CollectionCallbackActionDecorator;
 import org.gradle.internal.reflect.Instantiator;
 
 public class TypeScriptExtension {
@@ -15,9 +16,9 @@ public class TypeScriptExtension {
 	private final ProjectSourceSet sources;
 	private final BinaryContainer binaries;
 
-	public TypeScriptExtension(final Project project, Instantiator instantiator) {
-		this.sources = instantiator.newInstance(DefaultProjectSourceSet.class, instantiator);
-		this.binaries = instantiator.newInstance(DefaultBinaryContainer.class, instantiator);
+	public TypeScriptExtension(final Project project, Instantiator instantiator, CollectionCallbackActionDecorator collectionCallbackActionDecorator) {
+		this.sources = instantiator.newInstance(DefaultProjectSourceSet.class, instantiator, collectionCallbackActionDecorator);
+		this.binaries = instantiator.newInstance(DefaultBinaryContainer.class, instantiator, collectionCallbackActionDecorator);
 
 		binaries.withType(BinaryInternal.class).all(new Action<BinaryInternal>() {
 			public void execute(BinaryInternal binary) {
