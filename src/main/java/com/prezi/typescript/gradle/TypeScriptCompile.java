@@ -114,6 +114,7 @@ public class TypeScriptCompile extends AbstractTypeScriptCompile {
 	}
 
 	@Override
+	@Internal
 	protected List<File> getInputSources() {
 		List<File> entryPoints = getCommonJsEntryPoints();
 		if (entryPoints != null) {

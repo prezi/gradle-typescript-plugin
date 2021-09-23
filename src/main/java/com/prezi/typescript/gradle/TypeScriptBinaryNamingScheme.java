@@ -2,8 +2,8 @@ package com.prezi.typescript.gradle;
 
 import com.google.common.collect.Lists;
 import com.prezi.typescript.gradle.incubating.BinaryNamingScheme;
-import org.gradle.api.Nullable;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class TypeScriptBinaryNamingScheme implements BinaryNamingScheme {

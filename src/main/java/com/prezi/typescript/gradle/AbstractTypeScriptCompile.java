@@ -9,10 +9,8 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.tools.ant.taskdefs.condition.Os;
 import org.gradle.api.file.FileTree;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.SourceTask;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -78,6 +76,7 @@ public class AbstractTypeScriptCompile extends SourceTask implements NeedsTypeSc
 		setSerializableFileComparator(serializableFileComparator);
 	}
 
+	@Internal
 	public boolean getIsCompilingTests() {
 		return isTestCompile;
 	}
